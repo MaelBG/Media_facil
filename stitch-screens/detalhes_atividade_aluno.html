@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d9dadb",
+                        "error": "#ba1a1a",
+                        "primary-container": "#7da2d1",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "surface-container-high": "#e8e8e9",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002018",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#2f3132",
+                        "on-primary-fixed-variant": "#204972",
+                        "secondary-container": "#b6ebd8",
+                        "tertiary": "#745945",
+                        "surface": "#f9f9fa",
+                        "on-primary-container": "#083861",
+                        "tertiary-container": "#ba9983",
+                        "secondary-fixed": "#b9eedb",
+                        "outline": "#73777f",
+                        "secondary": "#366758",
+                        "on-background": "#1a1c1d",
+                        "primary-fixed-dim": "#a4c9fa",
+                        "surface-bright": "#f9f9fa",
+                        "primary-fixed": "#d2e4ff",
+                        "outline-variant": "#c3c6d0",
+                        "secondary-fixed-dim": "#9dd1bf",
+                        "on-tertiary-fixed": "#2a1708",
+                        "on-tertiary-fixed-variant": "#5a422f",
+                        "on-tertiary-container": "#483220",
+                        "on-secondary-container": "#3a6c5d",
+                        "on-surface": "#1a1c1d",
+                        "inverse-on-surface": "#f0f1f2",
+                        "background": "#f9f9fa",
+                        "surface-container-highest": "#e2e2e3",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#a4c9fa",
+                        "tertiary-fixed": "#ffdcc4",
+                        "primary": "#3b608c",
+                        "on-surface-variant": "#42474e",
+                        "surface-tint": "#3b608c",
+                        "on-secondary-fixed-variant": "#1c4f41",
+                        "on-primary-fixed": "#001c37",
+                        "tertiary-fixed-dim": "#e3c0a8",
+                        "surface-variant": "#e2e2e3",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#eeeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "caption": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9f9fa;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1a1c1d;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm flex justify-between items-center w-full px-margin-desktop h-16 fixed top-0 z-40">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">EduFlow LMS</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-low transition-colors px-3 py-2 rounded-lg" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-primary px-3 py-2" href="#">Atividades</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-low transition-colors px-3 py-2 rounded-lg" href="#">Calendário</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant p-2 rounded-full hover:bg-surface-container-low transition-all duration-200 active:scale-95">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant p-2 rounded-full hover:bg-surface-container-low transition-all duration-200 active:scale-95">help</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A professional and friendly portrait of a young adult student in a brightly lit, modern educational environment. She has a warm expression and is wearing casual, contemporary clothing. The background is softly blurred, showing a clean, high-end university library with soft pastel tones and natural sunlight filtering through large windows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7A2x89mIvWSk1rVcgPAy4suNZLUik_r9pHgsx6UI55ALZoyO1rLIVxyHNZSyaYix8Sm_PgZoREMQ0H1_9vdOD4_DrdvsdRcQhckUmt8-NwiAW3mANdSybxAQBPrJXyKNFJb6sHo1MlNUG0-QPJxmCd82uDc1glaGmNlS6RHaJEjTSarmIZ4LxcEhtdgS5t1t26_TPUearyGok03BVZWndYJg5uP-W59XOrpFaRvTkma7eefPbCaIHPlWBDabkMN1SK5eUAheFw1Y"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
+<!-- Breadcrumb & Header -->
+<div class="mb-10 animate-fade-in">
+<div class="flex items-center gap-2 text-on-surface-variant mb-4">
+<span class="font-label-md text-label-md">Minhas Turmas</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="font-label-md text-label-md">Design de Interface II</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="font-label-md text-label-md text-primary">Atividade 04: Prototipação</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Prototipação de Alta Fidelidade</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Criação de fluxos interativos utilizando componentes do Design System estabelecido nas aulas anteriores.</p>
+</div>
+<!-- Highlighted Grade -->
+<div class="bg-secondary-container rounded-xl p-6 flex flex-col items-center justify-center min-w-[140px] shadow-sm">
+<span class="font-label-md text-label-md text-on-secondary-container uppercase tracking-wider mb-1">Nota Final</span>
+<span class="font-headline-lg text-headline-lg text-on-secondary-container">9.5</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main Content Area (Description & Materials) -->
+<div class="md:col-span-8 flex flex-col gap-gutter">
+<!-- Task Description Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<h2 class="font-headline-md text-headline-md mb-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">description</span>
+                        Instruções da Tarefa
+                    </h2>
+<div class="font-body-md text-body-md text-on-surface-variant space-y-4">
+<p>Nesta atividade, você deve evoluir o wireframe da semana passada para um protótipo funcional de alta fidelidade. O foco principal é a consistência visual e o uso correto dos tokens de design (cores, tipografia e espaçamento).</p>
+<ul class="list-disc pl-5 space-y-2">
+<li>Implementar pelo menos 3 fluxos de usuário completos.</li>
+<li>Utilizar componentes variantes para estados de botões (hover, active, disabled).</li>
+<li>Garantir a acessibilidade nas razões de contraste de cores.</li>
+<li>Exportar o link do protótipo navegável.</li>
+</ul>
+<p class="pt-4 border-t border-outline-variant">Prazo de entrega: <span class="font-bold text-error">24 de Maio, às 23:59</span></p>
+</div>
+</section>
+<!-- Support Files Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<h2 class="font-headline-md text-headline-md mb-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">folder_open</span>
+                        Arquivos de Apoio
+                    </h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex items-center p-4 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all cursor-pointer group">
+<span class="material-symbols-outlined text-primary mr-4 text-[32px]">picture_as_pdf</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md text-on-surface truncate">Guia_de_Estilo_V2.pdf</p>
+<p class="text-[12px] text-on-surface-variant">2.4 MB</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">download</span>
+</div>
+<div class="flex items-center p-4 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all cursor-pointer group">
+<span class="material-symbols-outlined text-tertiary mr-4 text-[32px]">inventory_2</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md text-on-surface truncate">Assets_Iconografia.zip</p>
+<p class="text-[12px] text-on-surface-variant">15.8 MB</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">download</span>
+</div>
+</div>
+</section>
+<!-- Professor Feedback -->
+<section class="bg-tertiary-fixed rounded-xl p-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[80px]">forum</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-tertiary-fixed-variant mb-4">Feedback do Professor</h2>
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-white flex-shrink-0 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+<img alt="Professor" class="w-full h-full object-cover" data-alt="A portrait of a professional middle-aged male teacher with a friendly and knowledgeable expression. He is wearing a crisp white shirt in a modern, clean academic setting with books and soft lighting in the background. The aesthetic is bright and minimal, conveying a sense of expertise and mentorship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtMtVc6QtQkwecv9lXkYj3eHStEihmXmHdg8K63TbDRJCnGFnoAXAkXT2cMtiPSlGNxaocCbnN_bpC8ntZV5SiMlWiKhTbz3k13Z1qXHoqu723bf5TY0dDwKfIERXuWZkjtHCAH8JsC39Bgn5axDGzaKEZ6WGYFaTtnSKSqVX2R7U7GKI9cd6FkPPyfNfNu1UsfFG7YxkWBQnlokpJ52CJjgXNMcVN0Qezp-6p6ncGGKxBRgqE_RysLH0KRRRDPZ4DrXq5bHx-gL8"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-tertiary-fixed mb-1">Prof. Ricardo Almeida • Ontem às 14:20</p>
+<p class="font-body-md text-body-md text-on-tertiary-container italic leading-relaxed">
+                                "Excelente trabalho na hierarquia tipográfica. A escolha das cores do sistema reflete bem a proposta minimalista que discutimos. Notei apenas um pequeno desalinhamento no grid mobile da seção de checkout, mas nada que comprometa a qualidade geral. Parabéns pelo empenho!"
+                            </p>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Area (Upload & Details) -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Submission Status Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-6">Status da Entrega</h2>
+<div class="mb-8">
+<div class="flex justify-between items-center mb-2">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-[12px] font-bold">Entregue com sucesso</span>
+<span class="font-label-md text-label-md text-on-surface-variant">100%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-full rounded-full"></div>
+</div>
+</div>
+<!-- Upload Area / Preview -->
+<div class="mb-6">
+<p class="font-label-md text-label-md text-on-surface mb-3">Seu arquivo enviado:</p>
+<div class="p-4 bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center text-center group hover:border-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-primary mb-2 text-[32px]">cloud_done</span>
+<p class="font-label-md text-label-md text-on-surface">Atividade04_Design_Interface.fig</p>
+<p class="text-[12px] text-on-surface-variant">Enviado em 23/05 às 10:15</p>
+</div>
+</div>
+<button class="w-full py-4 bg-primary text-on-primary font-label-md text-label-md rounded-xl shadow-md hover:bg-opacity-90 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+                        Substituir Arquivo
+                    </button>
+<p class="text-[12px] text-on-surface-variant text-center mt-4">Tamanho máximo: 50MB. Formatos aceitos: .fig, .zip, .pdf</p>
+</section>
+<!-- Activity Details -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-6">Informações</h2>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">event</span>
+</div>
+<div>
+<p class="text-[12px] text-on-surface-variant">Data da Atribuição</p>
+<p class="font-label-md text-label-md">15 de Maio, 2024</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">stars</span>
+</div>
+<div>
+<p class="text-[12px] text-on-surface-variant">Pontuação Máxima</p>
+<p class="font-label-md text-label-md">10.0 pontos</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">group</span>
+</div>
+<div>
+<p class="text-[12px] text-on-surface-variant">Tipo de Atividade</p>
+<p class="font-label-md text-label-md">Individual</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-low flex justify-around items-center h-16 z-50 px-4">
+<button class="flex flex-col items-center text-on-surface-variant transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-label-md">Dashboard</span>
+</button>
+<button class="flex flex-col items-center text-primary font-bold transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="text-[10px] font-label-md">Atividades</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-label-md">Agenda</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-label-md">Ajustes</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for file upload hover area
+        const uploadArea = document.querySelector('.group.border-dashed');
+        if(uploadArea) {
+            uploadArea.addEventListener('mouseenter', () => {
+                uploadArea.classList.add('bg-surface-container-high');
+            });
+            uploadArea.addEventListener('mouseleave', () => {
+                uploadArea.classList.remove('bg-surface-container-high');
+            });
+        }
+
+        // Interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

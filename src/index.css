@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b608c;
+  --color-primary-container: #7da2d1;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #083861;
+
+  --color-secondary: #366758;
+  --color-secondary-container: #b6ebd8;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #3a6c5d;
+
+  --color-tertiary: #745945;
+  --color-tertiary-container: #ba9983;
+  --color-on-tertiary-container: #483220;
+
+  --color-surface: #f9f9fa;
+  --color-surface-dim: #d9dadb;
+  --color-surface-bright: #f9f9fa;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3f4;
+  --color-surface-container: #eeeeef;
+  --color-surface-container-high: #e8e8e9;
+  --color-surface-container-highest: #e2e2e3;
+  --color-on-surface: #1a1c1d;
+  --color-on-surface-variant: #42474e;
+
+  --color-background: #f9f9fa;
+  --color-on-background: #1a1c1d;
+
+  --color-outline: #73777f;
+  --color-outline-variant: #c3c6d0;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --font-sans: "Plus Jakarta Sans", "sans-serif";
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+/* Modo Escuro (Dark Mode) */
+.dark {
+  --color-surface: #0f1115;
+  --color-surface-dim: #090a0d;
+  --color-surface-bright: #1c1f26;
+  --color-surface-container-lowest: #0b0c10;
+  --color-surface-container-low: #15181f;
+  --color-surface-container: #1b1e25;
+  --color-surface-container-high: #21252f;
+  --color-surface-container-highest: #282e3a;
+  --color-on-surface: #f0f1f5;
+  --color-on-surface-variant: #b0b4c3;
+
+  --color-background: #0f1115;
+  --color-on-background: #f0f1f5;
+
+  --color-outline: #8c8f9f;
+  --color-outline-variant: #343845;
+
+  --color-primary: #a3c4f3;
+  --color-primary-container: #1c3452;
+  --color-on-primary: #072242;
+  --color-on-primary-container: #d2e4ff;
+
+  --color-secondary: #8ed3b9;
+  --color-secondary-container: #173b30;
+  --color-on-secondary: #05241b;
+  --color-on-secondary-container: #b3f0d5;
+}
+
+.dark .bg-white {
+  background-color: var(--color-surface-container-lowest) !important;
+  color: var(--color-on-surface) !important;
+}
+
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark select,
+.dark textarea {
+  color: var(--color-on-surface) !important;
+  background-color: var(--color-surface-container-low) !important;
+}
+
+.dark table {
+  color: var(--color-on-surface) !important;
+}
+
+.dark tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.dark .bg-surface-container {
+  background-color: var(--color-surface-container) !important;
+}
+
+.dark .bg-surface-container-low {
+  background-color: var(--color-surface-container-low) !important;
+}
+
+.dark .bg-background {
+  background-color: var(--color-background) !important;
+}
+
+.dark .border-outline-variant {
+  border-color: var(--color-outline-variant) !important;
+}
+
+.dark .border-surface-container {
+  border-color: var(--color-outline-variant) !important;
+}
+
+.dark .border-white {
+  border-color: var(--color-outline-variant) !important;
+}
+
+.dark ::placeholder {
+  color: var(--color-outline) !important;
+  opacity: 0.7;
+}
