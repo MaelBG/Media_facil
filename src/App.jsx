@@ -62,10 +62,62 @@ export default function App() {
   }); // 'login' | 'teacher_dashboard' | 'teacher_class' | 'student_dashboard'
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [activeTab, setActiveTab] = useState("boletim");
+  const [allMateriasAvg, setAllMateriasAvg] = useState({});
+
+  // Calcula média ponderada de um relatório de aluno (reutilizável)
+  const calcWeightedAvg = (report) => {
+    if (!report) return "0.0";
+    const provas = report.notas.filter(n => n.tipo === "prova" && n.valor_obtido !== null);
+    let pAvg = 0.0;
+    if (provas.length > 0) {
+      const somaO = provas.reduce((s, n) => s + n.valor_obtido, 0);
+      const somaM = provas.reduce((s, n) => s + n.valor_maximo, 0);
+      pAvg = (somaO / somaM) * 10;
+    }
+    const paulista = report.notas.filter(n => n.tipo === "prova_paulista" && n.valor_obtido !== null);
+    let paulistaAvg = 0.0;
+    if (paulista.length > 0) {
+      const somaO = paulista.reduce((s, n) => s + n.valor_obtido, 0);
+      const somaM = paulista.reduce((s, n) => s + n.valor_maximo, 0);
+      paulistaAvg = (somaO / somaM) * 10;
+    }
+    const atividades = report.notas.filter(n => n.tipo === "atividade");
+    let aScore = 10.0;
+    if (atividades.length > 0) {
+      const concluidas = atividades.filter(n => n.valor_obtido === n.valor_maximo).length;
+      aScore = (concluidas / atividades.length) * 10;
+    }
+    let vScore = 10.0;
+    if (report.vistos && report.vistos.length > 0) {
+      const concluidos = report.vistos.filter(v => v.status === true).length;
+      vScore = (concluidos / report.vistos.length) * 10;
+    }
+    const pesos = report.turma?.pesos || { provas: 50, prova_paulista: 20, atividades: 15, vistos: 15 };
+    const finalAvg = (
+      pAvg * (pesos.provas ?? 50) +
+      paulistaAvg * (pesos.prova_paulista ?? 20) +
+      aScore * (pesos.atividades ?? 15) +
+      vScore * (pesos.vistos ?? 15)
+    ) / 100;
+    return finalAvg.toFixed(1);
+  };
 
   const loadStudentData = async (studentId, targetClassId) => {
     const report = await dbService.getStudentReport(studentId, targetClassId);
     setStudentReport(report);
+    // Calcular médias de todas as matérias
+    if (report?.materias && report.materias.length > 0) {
+      const avgs = {};
+      await Promise.all(report.materias.map(async (materia) => {
+        try {
+          const r = await dbService.getStudentReport(studentId, materia.id);
+          avgs[materia.id] = calcWeightedAvg(r);
+        } catch {
+          avgs[materia.id] = "0.0";
+        }
+      }));
+      setAllMateriasAvg(avgs);
+    }
   };
 
   const loadTeacherData = async (profId) => {
@@ -482,7 +534,9 @@ export default function App() {
   };
 
   // Cálculo da média ponderada para o Dashboard do Aluno
-  const getStudentDashboardWeightedAverage = () => {
+  // Delega para calcWeightedAvg com o studentReport ativo
+  const getStudentDashboardWeightedAverage = () => calcWeightedAvg(studentReport);
+  const _unused_getStudentDashboardWeightedAverage_original = () => {
     if (!studentReport) return "0.0";
     
     // Provas
