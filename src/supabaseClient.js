@@ -7,4 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Aviso: Chaves do Supabase não encontradas. Certifique-se de configurar o arquivo .env com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey) 
+  : null;

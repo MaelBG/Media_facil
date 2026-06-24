@@ -281,6 +281,28 @@ export const dbService = {
     }
   },
 
+  deleteClass: async (classId) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from("turmas")
+        .delete()
+        .eq("id", classId);
+      if (error) throw error;
+      return { success: true };
+    } else {
+      const db = getLocalDB();
+      db.turmas = db.turmas.filter(t => t.id !== classId);
+      db.atividades = db.atividades.filter(a => a.turma_id !== classId);
+      db.semanas_turma = db.semanas_turma.filter(s => s.classId !== classId);
+      if (db.vistos_semanais) {
+        db.vistos_semanais = db.vistos_semanais.filter(v => v.class_id !== classId);
+      }
+      saveLocalDB(db);
+      return { success: true };
+    }
+  },
+
+
   // Alunos
   getStudentsByClass: async (classId) => {
     if (isSupabaseConfigured) {
@@ -457,6 +479,52 @@ export const dbService = {
     }
   },
 
+  updateActivity: async (activityId, titulo, valorMaximo, dataEntrega) => {
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase
+        .from("atividades")
+        .update({
+          titulo,
+          valor_maximo: Number(valorMaximo),
+          data_entrega: dataEntrega || new Date().toISOString().split("T")[0]
+        })
+        .eq("id", activityId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const db = getLocalDB();
+      const activity = db.atividades.find(a => a.id === activityId);
+      if (activity) {
+        activity.titulo = titulo;
+        activity.valor_maximo = Number(valorMaximo);
+        activity.data_entrega = dataEntrega || new Date().toISOString().split("T")[0];
+        saveLocalDB(db);
+        return activity;
+      }
+      throw new Error("Atividade não encontrada");
+    }
+  },
+
+  deleteActivity: async (activityId) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from("atividades")
+        .delete()
+        .eq("id", activityId);
+      if (error) throw error;
+      return { success: true };
+    } else {
+      const db = getLocalDB();
+      db.atividades = db.atividades.filter(a => a.id !== activityId);
+      db.notas = db.notas.filter(n => n.atividade_id !== activityId);
+      saveLocalDB(db);
+      return { success: true };
+    }
+  },
+
+
   // Notas
   getGradesByClass: async (classId) => {
     if (isSupabaseConfigured) {
@@ -570,6 +638,74 @@ export const dbService = {
     }
   },
 
+  deleteWeekFromClass: async (classId, semana) => {
+    if (isSupabaseConfigured) {
+      // 1. Deleta a semana letiva da turma
+      const { error: weekError } = await supabase
+        .from("semanas_turma")
+        .delete()
+        .match({ turma_id: classId, semana: Number(semana) });
+      if (weekError) throw weekError;
+
+      // 2. Deleta os vistos registrados para essa semana nessa turma
+      const { error: vistosError } = await supabase
+        .from("vistos_semanais")
+        .delete()
+        .match({ turma_id: classId, semana: Number(semana) });
+      if (vistosError) throw vistosError;
+
+      return { success: true };
+    } else {
+      const db = getLocalDB();
+      const sIndex = db.semanas_turma.findIndex(s => s.classId === classId);
+      if (sIndex !== -1) {
+        db.semanas_turma[sIndex].semanas = db.semanas_turma[sIndex].semanas.filter(w => w !== Number(semana));
+      }
+      if (db.vistos_semanais) {
+        db.vistos_semanais = db.vistos_semanais.filter(v => !(v.class_id === classId && v.semana === Number(semana)));
+      }
+      saveLocalDB(db);
+      return { success: true };
+    }
+  },
+
+  saveAllVistosForStudent: async (alunoId, classId, semanas, status) => {
+    if (isSupabaseConfigured) {
+      const records = semanas.map(semana => ({
+        aluno_id: alunoId,
+        turma_id: classId,
+        semana: Number(semana),
+        status: status
+      }));
+      const { error } = await supabase
+        .from("vistos_semanais")
+        .upsert(records, { onConflict: "aluno_id,turma_id,semana" });
+      if (error) throw error;
+      return { success: true };
+    } else {
+      const db = getLocalDB();
+      if (!db.vistos_semanais) db.vistos_semanais = [];
+      
+      semanas.forEach(semana => {
+        const index = db.vistos_semanais.findIndex(
+          v => v.aluno_id === alunoId && v.class_id === classId && v.semana === Number(semana)
+        );
+        if (index !== -1) {
+          db.vistos_semanais[index].status = status;
+        } else {
+          db.vistos_semanais.push({
+            aluno_id: alunoId,
+            class_id: classId,
+            semana: Number(semana),
+            status: status
+          });
+        }
+      });
+      saveLocalDB(db);
+      return { success: true };
+    }
+  },
+
   getVistosByClass: async (classId) => {
     if (isSupabaseConfigured) {
       const { data } = await supabase
@@ -579,7 +715,7 @@ export const dbService = {
       return data || [];
     } else {
       const db = getLocalDB();
-      return db.vistos_semanais || [];
+      return (db.vistos_semanais || []).filter(v => v.class_id === classId);
     }
   },
 
