@@ -265,9 +265,13 @@ begin
   );
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql
+set search_path = public, pg_temp;
 
 -- Trigger para criar perfil automaticamente após signup no Auth
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Revoga a execução pública da função de trigger para segurança
+revoke execute on function public.handle_new_user() from public;
