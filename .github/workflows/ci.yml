@@ -29,3 +29,14 @@ jobs:
 
       - name: Verify build compilation
         run: npm run build
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Start Supabase Local
+        run: supabase start
+
+      - name: Verify Migrations (Reset DB)
+        run: supabase db reset
