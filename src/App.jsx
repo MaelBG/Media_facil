@@ -20,7 +20,9 @@ import {
   FileText,
   User,
   Sun,
-  Moon
+  Moon,
+  Trash2,
+  Edit
 } from "lucide-react";
 
 const getInitialUser = () => {
@@ -165,8 +167,15 @@ export default function App() {
     const atividades = report.notas.filter(n => n.tipo === "atividade");
     let aScore = 10.0;
     if (atividades.length > 0) {
-      const concluidas = atividades.filter(n => n.valor_obtido === n.valor_maximo).length;
-      aScore = (concluidas / atividades.length) * 10;
+      let somaObtida = 0;
+      let somaMaxima = 0;
+      atividades.forEach(n => {
+        if (n.valor_obtido !== null) {
+          somaObtida += Number(n.valor_obtido);
+        }
+        somaMaxima += Number(n.valor_maximo);
+      });
+      aScore = somaMaxima > 0 ? (somaObtida / somaMaxima) * 10 : 10.0;
     }
     let vScore = 10.0;
     if (report.vistos && report.vistos.length > 0) {
@@ -245,6 +254,13 @@ export default function App() {
   const [newActivityType, setNewActivityType] = useState("atividade"); // 'atividade' | 'prova'
   const [newActivityMaxScore, setNewActivityMaxScore] = useState(10);
   const [newActivityDate, setNewActivityDate] = useState("");
+
+  // Edit Activity/Exam state
+  const [showEditActivityModal, setShowEditActivityModal] = useState(false);
+  const [editingActivity, setEditingActivity] = useState(null);
+  const [editActivityTitle, setEditActivityTitle] = useState("");
+  const [editActivityMaxScore, setEditActivityMaxScore] = useState(10);
+  const [editActivityDate, setEditActivityDate] = useState("");
 
   // Weights configuration inputs
   const [classWeights, setClassWeights] = useState({ provas: 50, prova_paulista: 20, atividades: 15, vistos: 15 });
@@ -434,6 +450,36 @@ export default function App() {
     setShowAddActivityModal(false);
   };
 
+  const handleStartEditActivity = (activity) => {
+    setEditingActivity(activity);
+    setEditActivityTitle(activity.titulo || "");
+    setEditActivityMaxScore(activity.valor_maximo || 10);
+    setEditActivityDate(activity.data_entrega || "");
+    setShowEditActivityModal(true);
+  };
+
+  const handleEditActivity = async (e) => {
+    e.preventDefault();
+    if (!editingActivity || !editActivityTitle.trim()) return;
+
+    await dbService.updateActivity(
+      editingActivity.id,
+      editActivityTitle,
+      editActivityMaxScore,
+      editActivityDate
+    );
+    await loadClassData(selectedClassId);
+    setShowEditActivityModal(false);
+    setEditingActivity(null);
+  };
+
+  const handleDeleteActivity = async (activityId, title) => {
+    if (confirm(`Deseja realmente excluir a avaliação/atividade "${title}"? Todos os lançamentos de notas vinculados serão perdidos permanentemente.`)) {
+      await dbService.deleteActivity(activityId);
+      await loadClassData(selectedClassId);
+    }
+  };
+
   const handleGradeChange = async (alunoId, atividadeId, val, maxVal) => {
     let score = val === "" ? "" : Number(val);
     
@@ -548,15 +594,17 @@ export default function App() {
     const atividadesClass = activities.filter(a => a.tipo === "atividade");
     if (atividadesClass.length === 0) return 10.0; // Se não tem atividades, não penaliza o aluno
     
-    let concluidas = 0;
+    let somaObtida = 0;
+    let somaMaxima = 0;
     atividadesClass.forEach(at => {
       const g = grades.find(grade => grade.aluno_id === alunoId && grade.atividade_id === at.id);
-      if (g && g.valor_obtido === at.valor_maximo) {
-        concluidas++;
+      if (g && g.valor_obtido !== null) {
+        somaObtida += Number(g.valor_obtido);
       }
+      somaMaxima += Number(at.valor_maximo);
     });
 
-    return (concluidas / atividadesClass.length) * 10;
+    return somaMaxima > 0 ? (somaObtida / somaMaxima) * 10 : 10.0;
   };
 
   // Porcentagem de Vistos Obtidos (Convertido para escala 0 a 10)
@@ -611,15 +659,15 @@ export default function App() {
     const atividadesClass = activities.filter(a => a.tipo === "atividade");
     if (atividadesClass.length === 0) return "0 / 0";
     
-    let concluidas = 0;
+    let entregues = 0;
     atividadesClass.forEach(at => {
       const g = grades.find(grade => grade.aluno_id === alunoId && grade.atividade_id === at.id);
-      if (g && g.valor_obtido === at.valor_maximo) {
-        concluidas++;
+      if (g && g.valor_obtido !== null) {
+        entregues++;
       }
     });
 
-    return `${concluidas} / ${atividadesClass.length}`;
+    return `${entregues} / ${atividadesClass.length}`;
   };
 
   const getStudentVistoCount = (alunoId) => {
@@ -1426,14 +1474,32 @@ export default function App() {
                           {activities.filter(a => a.tipo === "prova").map(at => (
                             <th 
                               key={at.id}
-                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center"
+                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center group"
                             >
-                              <div className="space-y-1">
+                              <div className="space-y-1 relative">
                                 <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-error/15 text-error">
                                   PROVA / PROJETO (Máx: {at.valor_maximo})
                                 </span>
                                 <div className="text-[11px] truncate max-w-[140px] font-bold mx-auto" title={at.titulo}>
                                   {at.titulo}
+                                </div>
+                                <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity mt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditActivity(at)}
+                                    className="text-primary hover:text-primary/85 p-0.5 transition-all"
+                                    title="Editar Prova"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteActivity(at.id, at.titulo)}
+                                    className="text-error hover:text-error/85 p-0.5 transition-all"
+                                    title="Excluir Prova"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
                             </th>
@@ -1525,14 +1591,32 @@ export default function App() {
                           {activities.filter(a => a.tipo === "prova_paulista").map(at => (
                             <th 
                               key={at.id}
-                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center"
+                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center group"
                             >
-                              <div className="space-y-1">
+                              <div className="space-y-1 relative">
                                 <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-secondary text-white">
                                   P. PAULISTA (Máx: {at.valor_maximo})
                                 </span>
                                 <div className="text-[11px] truncate max-w-[140px] font-bold mx-auto" title={at.titulo}>
                                   {at.titulo}
+                                </div>
+                                <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity mt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditActivity(at)}
+                                    className="text-primary hover:text-primary/85 p-0.5 transition-all"
+                                    title="Editar Prova Paulista"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteActivity(at.id, at.titulo)}
+                                    className="text-error hover:text-error/85 p-0.5 transition-all"
+                                    title="Excluir Prova Paulista"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
                             </th>
@@ -1624,14 +1708,32 @@ export default function App() {
                           {activities.filter(a => a.tipo === "atividade").map(at => (
                             <th 
                               key={at.id}
-                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center"
+                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center group"
                             >
-                              <div className="space-y-1">
+                              <div className="space-y-1 relative">
                                 <span className="inline-block text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary-container/20 text-primary">
                                   ATIVIDADE
                                 </span>
                                 <div className="text-[11px] truncate max-w-[140px] font-bold mx-auto" title={at.titulo}>
                                   {at.titulo}
+                                </div>
+                                <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity mt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditActivity(at)}
+                                    className="text-primary hover:text-primary/85 p-0.5 transition-all"
+                                    title="Editar Atividade"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteActivity(at.id, at.titulo)}
+                                    className="text-error hover:text-error/85 p-0.5 transition-all"
+                                    title="Excluir Atividade"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
                             </th>
@@ -1723,9 +1825,24 @@ export default function App() {
                           {weeks.map(sem => (
                             <th 
                               key={sem}
-                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center"
+                              className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center group"
                             >
-                              Semana {sem}
+                              <div className="flex flex-col items-center justify-center gap-1">
+                                <span>Semana {sem}</span>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (confirm(`Deseja realmente excluir a Semana ${sem} e todos os vistos vinculados a ela?`)) {
+                                      await dbService.deleteWeekFromClass(selectedClassId, sem);
+                                      await loadClassData(selectedClassId);
+                                    }
+                                  }}
+                                  title={`Excluir Semana ${sem}`}
+                                  className="text-error hover:text-error/85 p-0.5 rounded opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </th>
                           ))}
 
@@ -2118,7 +2235,8 @@ export default function App() {
                     </button>
                     <button 
                       type="submit" 
-                      className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md"
+                      disabled={Number(inputWeightProvas) + Number(inputWeightProvaPaulista) + Number(inputWeightAtividades) + Number(inputWeightVistos) !== 100}
+                      className="px-4 py-2 bg-primary disabled:bg-outline-variant disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md cursor-pointer"
                     >
                       Salvar Pesos
                     </button>
@@ -2274,6 +2392,76 @@ export default function App() {
                       className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md"
                     >
                       Criar Coluna
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Editar Prova / Atividade */}
+          {showEditActivityModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 className="text-xl font-bold text-on-surface">
+                  {editingActivity?.tipo === "prova" 
+                    ? "Editar Prova / Avaliação" 
+                    : editingActivity?.tipo === "prova_paulista"
+                    ? "Editar Prova Paulista"
+                    : "Editar Atividade (Checklist)"}
+                </h3>
+                <form onSubmit={handleEditActivity} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Título do Lançamento</label>
+                    <input 
+                      type="text" 
+                      value={editActivityTitle}
+                      onChange={(e) => setEditActivityTitle(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  
+                  {(editingActivity?.tipo === "prova" || editingActivity?.tipo === "prova_paulista") && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Nota Máxima</label>
+                      <input 
+                        type="number" 
+                        value={editActivityMaxScore}
+                        onChange={(e) => setEditActivityMaxScore(Number(e.target.value))}
+                        min="1"
+                        max="100"
+                        required
+                        className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Data de Entrega / Realização</label>
+                    <input 
+                      type="date" 
+                      value={editActivityDate}
+                      onChange={(e) => setEditActivityDate(e.target.value)}
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowEditActivityModal(false);
+                        setEditingActivity(null);
+                      }}
+                      className="px-4 py-2 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md"
+                    >
+                      Salvar Alterações
                     </button>
                   </div>
                 </form>
@@ -2494,7 +2682,7 @@ export default function App() {
 
                     Object.values(allMateriasReports).forEach(r => {
                       if (r?.notas) {
-                        totalAtividadesEntregues += r.notas.filter(n => n.tipo === "atividade" && n.valor_obtido === n.valor_maximo).length;
+                        totalAtividadesEntregues += r.notas.filter(n => n.tipo === "atividade" && n.valor_obtido !== null).length;
                         totalAtividades += r.notas.filter(n => n.tipo === "atividade").length;
                       }
                       if (r?.vistos) {
@@ -2545,7 +2733,7 @@ export default function App() {
                         const report = allMateriasReports[materia.id];
                         const avg = allMateriasAvg[materia.id] || "0.0";
                         
-                        const entregaCount = report?.notas?.filter(n => n.tipo === "atividade" && n.valor_obtido === n.valor_maximo).length || 0;
+                        const entregaCount = report?.notas?.filter(n => n.tipo === "atividade" && n.valor_obtido !== null).length || 0;
                         const totalCount = report?.notas?.filter(n => n.tipo === "atividade").length || 0;
                         
                         const vistoCount = report?.vistos?.filter(v => v.status === true).length || 0;
@@ -2944,14 +3132,21 @@ export default function App() {
                         <div className="text-right mt-2 sm:mt-0">
                           <p className="text-sm font-semibold">
                             Entregas: <span className="font-bold text-primary">
-                              {studentReport?.notas?.filter(n => n.tipo === "atividade" && n.valor_obtido === n.valor_maximo).length} de {studentReport?.notas?.filter(n => n.tipo === "atividade").length}
+                              {studentReport?.notas?.filter(n => n.tipo === "atividade" && n.valor_obtido !== null).length} de {studentReport?.notas?.filter(n => n.tipo === "atividade").length}
                             </span>
                             {" "}
                             (<span className="font-bold text-primary">{(() => {
                               const atividades = studentReport?.notas?.filter(n => n.tipo === "atividade") || [];
                               if (atividades.length === 0) return "10.0";
-                              const concluidas = atividades.filter(n => n.valor_obtido === n.valor_maximo).length;
-                              return ((concluidas / atividades.length) * 10).toFixed(1);
+                              let somaObtida = 0;
+                              let somaMaxima = 0;
+                              atividades.forEach(n => {
+                                if (n.valor_obtido !== null) {
+                                  somaObtida += Number(n.valor_obtido);
+                                }
+                                somaMaxima += Number(n.valor_maximo);
+                              });
+                              return somaMaxima > 0 ? ((somaObtida / somaMaxima) * 10).toFixed(1) : "10.0";
                             })()} / 10</span>)
                           </p>
                           <p className="text-xs text-on-surface-variant">
@@ -2959,8 +3154,15 @@ export default function App() {
                               const atividades = studentReport?.notas?.filter(n => n.tipo === "atividade") || [];
                               let aScore = 10.0;
                               if (atividades.length > 0) {
-                                const concluidas = atividades.filter(n => n.valor_obtido === n.valor_maximo).length;
-                                aScore = (concluidas / atividades.length) * 10;
+                                let somaObtida = 0;
+                                let somaMaxima = 0;
+                                atividades.forEach(n => {
+                                  if (n.valor_obtido !== null) {
+                                    somaObtida += Number(n.valor_obtido);
+                                  }
+                                  somaMaxima += Number(n.valor_maximo);
+                                });
+                                aScore = somaMaxima > 0 ? (somaObtida / somaMaxima) * 10 : 10.0;
                               }
                               const peso = studentReport?.turma?.pesos?.atividades ?? 15;
                               return ((aScore * peso) / 100).toFixed(2);
