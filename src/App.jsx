@@ -262,6 +262,24 @@ export default function App() {
   const [editActivityMaxScore, setEditActivityMaxScore] = useState(10);
   const [editActivityDate, setEditActivityDate] = useState("");
 
+  // Edit Class states
+  const [showEditClassModal, setShowEditClassModal] = useState(false);
+  const [editingClass, setEditingClass] = useState(null);
+  const [editClassName, setEditClassName] = useState("");
+  const [editClassYear, setEditClassYear] = useState("");
+
+  // Delete Class states
+  const [showDeleteClassModal, setShowDeleteClassModal] = useState(false);
+  const [deletingClass, setDeletingClass] = useState(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+
+  // Edit Student states
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editStudentName, setEditStudentName] = useState("");
+  const [editStudentEmail, setEditStudentEmail] = useState("");
+  const [editStudentMatricula, setEditStudentMatricula] = useState("");
+
   // Weights configuration inputs
   const [classWeights, setClassWeights] = useState({ provas: 50, prova_paulista: 20, atividades: 15, vistos: 15 });
   const [inputWeightProvas, setInputWeightProvas] = useState(50);
@@ -476,6 +494,88 @@ export default function App() {
   const handleDeleteActivity = async (activityId, title) => {
     if (confirm(`Deseja realmente excluir a avaliação/atividade "${title}"? Todos os lançamentos de notas vinculados serão perdidos permanentemente.`)) {
       await dbService.deleteActivity(activityId);
+      await loadClassData(selectedClassId);
+    }
+  };
+
+  const handleStartEditClass = (cls) => {
+    setEditingClass(cls);
+    setEditClassName(cls.nome || "");
+    setEditClassYear(cls.ano || "");
+    setShowEditClassModal(true);
+  };
+
+  const handleEditClass = async (e) => {
+    e.preventDefault();
+    if (!editingClass || !editClassName.trim()) return;
+
+    const res = await dbService.updateClass(editingClass.id, editClassName.trim(), editClassYear.trim());
+    if (res.success) {
+      await loadTeacherData(currentUser.id);
+      setShowEditClassModal(false);
+      setEditingClass(null);
+    } else {
+      alert(res.error);
+    }
+  };
+
+  const handleStartDeleteClass = (cls) => {
+    setDeletingClass(cls);
+    setDeleteConfirmationText("");
+    setShowDeleteClassModal(true);
+  };
+
+  const handleDeleteClass = async (e) => {
+    e.preventDefault();
+    if (!deletingClass) return;
+
+    if (deleteConfirmationText.trim() !== deletingClass.nome.trim()) {
+      alert("O texto de confirmação não confere com o nome da turma.");
+      return;
+    }
+
+    await dbService.deleteClass(deletingClass.id);
+    await loadTeacherData(currentUser.id);
+    setShowDeleteClassModal(false);
+    setDeletingClass(null);
+    setDeleteConfirmationText("");
+    
+    if (selectedClassId === deletingClass.id) {
+      setSelectedClassId(null);
+      navigateTo({ view: "teacher_dashboard" }, true);
+    }
+  };
+
+  const handleStartEditStudent = (student) => {
+    setEditingStudent(student);
+    setEditStudentName(student.nome || "");
+    setEditStudentEmail(student.email || "");
+    setEditStudentMatricula(student.matricula || "");
+    setShowEditStudentModal(true);
+  };
+
+  const handleEditStudent = async (e) => {
+    e.preventDefault();
+    if (!editingStudent || !editStudentName.trim() || !editStudentEmail.trim()) return;
+
+    const res = await dbService.updateStudentInfo(editingStudent.id, {
+      nome: editStudentName.trim(),
+      email: editStudentEmail.trim(),
+      matricula: editStudentMatricula.trim()
+    });
+
+    if (res.success) {
+      await loadClassData(selectedClassId);
+      setShowEditStudentModal(false);
+      setEditingStudent(null);
+    } else {
+      alert(res.error);
+    }
+  };
+
+  const handleRemoveStudent = async (student) => {
+    if (confirm(`Deseja realmente remover o aluno "${student.nome}" desta turma? Ele não aparecerá mais nos diários de classe desta turma.`)) {
+      await dbService.removeStudentFromClass(selectedClassId, student.id);
       await loadClassData(selectedClassId);
     }
   };
@@ -1204,17 +1304,43 @@ export default function App() {
                           navigateTo({ view: "teacher_class", classId: cls.id });
                           setActiveTab("boletim");
                         }}
-                        className="bg-primary-container/10 p-6 rounded-2xl border border-white hover:border-primary-container/30 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer flex flex-col justify-between h-44"
+                        className="bg-primary-container/10 p-6 rounded-2xl border border-white hover:border-primary-container/30 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer flex flex-col justify-between h-44 group relative"
                       >
                         <div>
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-xs bg-primary/20 text-on-primary-container font-extrabold px-3 py-1 rounded-full uppercase">
                               {cls.ano}
                             </span>
-                            <span className="text-xs text-on-surface-variant font-semibold flex items-center gap-1">
-                              <Users className="w-3.5 h-3.5" />
-                              {dbService.getStudentsByClass(cls.id).length} Alunos
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-on-surface-variant font-semibold flex items-center gap-1">
+                                <Users className="w-3.5 h-3.5" />
+                                {dbService.getStudentsByClass(cls.id).length} Alunos
+                              </span>
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartEditClass(cls);
+                                  }}
+                                  className="text-primary hover:text-primary/80 p-1"
+                                  title="Editar Turma"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartDeleteClass(cls);
+                                  }}
+                                  className="text-error hover:text-error/80 p-1"
+                                  title="Excluir Turma"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
                           </div>
                           <h3 className="text-xl font-bold text-on-primary-container mb-1 leading-tight">{cls.nome}</h3>
                         </div>
@@ -1520,10 +1646,30 @@ export default function App() {
                         ) : (
                           getFilteredStudents().map(student => (
                             <tr key={student.id} className="hover:bg-surface-container-low/30 transition-colors">
-                              <td className="px-6 py-4">
-                                <div>
-                                  <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
-                                  <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} • {student.email}</p>
+                              <td className="px-6 py-4 group">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
+                                    <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} • {student.email}</p>
+                                  </div>
+                                  <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEditStudent(student)}
+                                      className="text-primary hover:text-primary/80 p-1"
+                                      title="Editar Aluno"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveStudent(student)}
+                                      className="text-error hover:text-error/80 p-1"
+                                      title="Remover da Turma"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
 
@@ -1637,10 +1783,30 @@ export default function App() {
                         ) : (
                           getFilteredStudents().map(student => (
                             <tr key={student.id} className="hover:bg-surface-container-low/30 transition-colors">
-                              <td className="px-6 py-4">
-                                <div>
-                                  <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
-                                  <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} • {student.email}</p>
+                              <td className="px-6 py-4 group">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
+                                    <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} • {student.email}</p>
+                                  </div>
+                                  <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEditStudent(student)}
+                                      className="text-primary hover:text-primary/80 p-1"
+                                      title="Editar Aluno"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveStudent(student)}
+                                      className="text-error hover:text-error/80 p-1"
+                                      title="Remover da Turma"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
 
@@ -1757,10 +1923,30 @@ export default function App() {
 
                             return (
                               <tr key={student.id} className="hover:bg-surface-container-low/30 transition-colors">
-                                <td className="px-6 py-4">
-                                  <div>
-                                    <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
-                                    <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} ({entregasInfo})</p>
+                                <td className="px-6 py-4 group">
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
+                                      <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} ({entregasInfo})</p>
+                                    </div>
+                                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEditStudent(student)}
+                                        className="text-primary hover:text-primary/80 p-1"
+                                        title="Editar Aluno"
+                                      >
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveStudent(student)}
+                                        className="text-error hover:text-error/80 p-1"
+                                        title="Remover da Turma"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </td>
 
@@ -1864,10 +2050,30 @@ export default function App() {
 
                             return (
                               <tr key={student.id} className="hover:bg-surface-container-low/30 transition-colors">
-                                <td className="px-6 py-4">
-                                  <div>
-                                    <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
-                                    <p className="text-caption text-on-surface-variant font-medium mt-0.5">Vistos: {totalVistos} / {weeks.length}</p>
+                                <td className="px-6 py-4 group">
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
+                                      <p className="text-caption text-on-surface-variant font-medium mt-0.5">Vistos: {totalVistos} / {weeks.length}</p>
+                                    </div>
+                                    <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEditStudent(student)}
+                                        className="text-primary hover:text-primary/80 p-1"
+                                        title="Editar Aluno"
+                                      >
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveStudent(student)}
+                                        className="text-error hover:text-error/80 p-1"
+                                        title="Remover da Turma"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </td>
 
@@ -1969,10 +2175,30 @@ export default function App() {
 
                               return (
                                 <tr key={student.id} className="hover:bg-surface-container-low/30 transition-colors">
-                                  <td className="px-6 py-4">
-                                    <div>
-                                      <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
-                                      <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula}</p>
+                                  <td className="px-6 py-4 group">
+                                    <div className="flex justify-between items-center">
+                                      <div>
+                                        <p className="font-bold text-sm text-on-surface leading-tight">{student.nome}</p>
+                                        <p className="text-caption text-on-surface-variant font-medium mt-0.5">{student.matricula} • {student.email}</p>
+                                      </div>
+                                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleStartEditStudent(student)}
+                                          className="text-primary hover:text-primary/80 p-1"
+                                          title="Editar Aluno"
+                                        >
+                                          <Edit className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveStudent(student)}
+                                          className="text-error hover:text-error/85 p-1"
+                                          title="Remover da Turma"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </div>
                                   </td>
                                   <td className="px-4 py-4 text-center">
@@ -2452,6 +2678,167 @@ export default function App() {
                       onClick={() => {
                         setShowEditActivityModal(false);
                         setEditingActivity(null);
+                      }}
+                      className="px-4 py-2 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md"
+                    >
+                      Salvar Alterações
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Editar Turma */}
+          {showEditClassModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 className="text-xl font-bold text-on-surface">Editar Turma</h3>
+                <form onSubmit={handleEditClass} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Nome da Turma</label>
+                    <input 
+                      type="text" 
+                      value={editClassName}
+                      onChange={(e) => setEditClassName(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Ano Letivo</label>
+                    <input 
+                      type="text" 
+                      value={editClassYear}
+                      onChange={(e) => setEditClassYear(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowEditClassModal(false);
+                        setEditingClass(null);
+                      }}
+                      className="px-4 py-2 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-all shadow-md"
+                    >
+                      Salvar Alterações
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Excluir Turma */}
+          {showDeleteClassModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="p-3 bg-error-container text-on-error-container rounded-xl flex items-center gap-2 text-sm font-semibold">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <span>Atenção: Ação Irreversível!</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface">Excluir Turma</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Isso excluirá permanentemente a turma <strong>{deletingClass?.nome}</strong> e todos os registros relacionados (alunos vinculados, notas de provas, checklist de atividades e vistos semanais).
+                </p>
+                <form onSubmit={handleDeleteClass} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-error mb-1">
+                      Para confirmar, digite exatamente o nome da turma abaixo:
+                    </label>
+                    <p className="text-sm font-bold text-on-surface mb-2 select-all bg-surface-container p-2 rounded-lg border border-outline-variant text-center">
+                      {deletingClass?.nome}
+                    </p>
+                    <input 
+                      type="text" 
+                      value={deleteConfirmationText}
+                      onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                      placeholder="Digite o nome da turma para confirmar" 
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-error text-sm font-medium"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowDeleteClassModal(false);
+                        setDeletingClass(null);
+                        setDeleteConfirmationText("");
+                      }}
+                      className="px-4 py-2 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={deleteConfirmationText.trim() !== deletingClass?.nome.trim()}
+                      className="px-4 py-2 bg-error disabled:bg-outline-variant disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-error/95 transition-all shadow-md"
+                    >
+                      Excluir Permanentemente
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Editar Aluno */}
+          {showEditStudentModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+              <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 className="text-xl font-bold text-on-surface">Editar Dados do Aluno</h3>
+                <form onSubmit={handleEditStudent} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      value={editStudentName}
+                      onChange={(e) => setEditStudentName(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">E-mail escolar</label>
+                    <input 
+                      type="email" 
+                      value={editStudentEmail}
+                      onChange={(e) => setEditStudentEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Matrícula</label>
+                    <input 
+                      type="text" 
+                      value={editStudentMatricula}
+                      onChange={(e) => setEditStudentMatricula(e.target.value)}
+                      className="w-full px-4 py-2 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowEditStudentModal(false);
+                        setEditingStudent(null);
                       }}
                       className="px-4 py-2 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all"
                     >

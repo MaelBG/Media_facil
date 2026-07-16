@@ -975,5 +975,80 @@ export const dbService = {
       const user = db.perfis.find(p => p.id === userId);
       return user ? user.senha : "";
     }
+  },
+
+  updateClass: async (classId, nome, ano) => {
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase
+        .from("turmas")
+        .update({ nome, ano })
+        .eq("id", classId)
+        .select()
+        .single();
+      if (error) return { success: false, error: error.message };
+      return { success: true, class: data };
+    } else {
+      const db = getLocalDB();
+      const turma = db.turmas.find(t => t.id === classId);
+      if (turma) {
+        turma.nome = nome;
+        turma.ano = ano;
+        saveLocalDB(db);
+        return { success: true, class: turma };
+      }
+      return { success: false, error: "Turma não encontrada." };
+    }
+  },
+
+  removeStudentFromClass: async (classId, studentId) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from("turma_alunos")
+        .delete()
+        .match({ turma_id: classId, aluno_id: studentId });
+      if (error) throw error;
+      return { success: true };
+    } else {
+      const db = getLocalDB();
+      const student = db.perfis.find(p => p.id === studentId);
+      if (student) {
+        if (student.turma_ids) {
+          student.turma_ids = student.turma_ids.filter(id => id !== classId);
+        }
+        if (student.turma_id === classId) {
+          student.turma_id = student.turma_ids && student.turma_ids.length > 0 ? student.turma_ids[0] : null;
+        }
+        saveLocalDB(db);
+      }
+      return { success: true };
+    }
+  },
+
+  updateStudentInfo: async (studentId, data) => {
+    if (isSupabaseConfigured) {
+      const { data: updated, error } = await supabase
+        .from("perfis")
+        .update({
+          nome: data.nome,
+          email: data.email,
+          matricula: data.matricula
+        })
+        .eq("id", studentId)
+        .select()
+        .single();
+      if (error) return { success: false, error: error.message };
+      return { success: true, student: updated };
+    } else {
+      const db = getLocalDB();
+      const student = db.perfis.find(p => p.id === studentId);
+      if (student) {
+        student.nome = data.nome;
+        student.email = data.email;
+        student.matricula = data.matricula;
+        saveLocalDB(db);
+        return { success: true, student };
+      }
+      return { success: false, error: "Aluno não encontrado." };
+    }
   }
 };
