@@ -1,3 +1,4 @@
+/* global process */
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
