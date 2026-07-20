@@ -1,3 +1,5 @@
+[![Continuous Integration](https://github.com/MaelBG/Media_facil/actions/workflows/ci.yml/badge.svg)](https://github.com/MaelBG/Media_facil/actions/workflows/ci.yml)
+
 # 🎓 Média Fácil — Portal de Notas Acadêmico
 
 > **Média Fácil** é uma plataforma escolar moderna, fluida e intuitiva desenvolvida para desonerar a carga cognitiva de professores e alunos. O sistema simplifica o acompanhamento de notas, o registro de vistos em cadernos e o cálculo automático de médias ponderadas complexas.
