@@ -100,23 +100,28 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-outline-variant">
-          <p className="text-center text-xs text-on-surface-variant font-medium mb-3">Testes rápidos (Demonstração):</p>
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => { handleQuickLogin("professor"); }}
-              className="px-3 py-2 bg-primary-container/20 hover:bg-primary-container/30 text-on-primary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
-            >
-              Modo Professor
-            </button>
-            <button 
-              onClick={() => { handleQuickLogin("aluno"); }}
-              className="px-3 py-2 bg-secondary-container/20 hover:bg-secondary-container/30 text-on-secondary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
-            >
-              Modo Aluno
-            </button>
+        {/* Botões de demonstração exibidos apenas em ambiente local/desenvolvimento */}
+        {(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && (
+          <div className="mt-8 pt-6 border-t border-outline-variant">
+            <p className="text-center text-xs text-on-surface-variant font-medium mb-3">Testes rápidos (Demonstração):</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                type="button"
+                onClick={() => { handleQuickLogin("professor"); }}
+                className="px-3 py-2 bg-primary-container/20 hover:bg-primary-container/30 text-on-primary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
+              >
+                Modo Professor
+              </button>
+              <button 
+                type="button"
+                onClick={() => { handleQuickLogin("aluno"); }}
+                className="px-3 py-2 bg-secondary-container/20 hover:bg-secondary-container/30 text-on-secondary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
+              >
+                Modo Aluno
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
