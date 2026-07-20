@@ -299,3 +299,40 @@ create or replace trigger on_auth_user_created
 
 -- Revoga a execução pública da função de trigger para segurança
 revoke execute on function public.handle_new_user() from public;
+
+-- Função para limpar dados de testes E2E com segurança
+create or replace function public.clean_test_data()
+returns void
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  -- 1. Deleta turmas com nome de E2E
+  delete from public.turmas
+  where nome like 'Turma E2E_%'
+     or nome like 'Turma Paulista E2E_%'
+     or nome like 'Turma Busca E2E_%'
+     or nome like 'Turma Visto E2E_%'
+     or nome like '%Editada'
+     or nome like '%Editado';
+
+  -- 2. Deleta perfis gerados por testes E2E
+  delete from public.perfis
+  where email like 'aluno_e2e_%'
+     or email like 'aluno_visto_%'
+     or email like 'aluno_paulista_%'
+     or email like 'ana_maria_%'
+     or email like 'carlos_silva_%';
+
+  -- 3. Deleta usuários do auth.users (isso vai propagar via CASCADE para public.perfis)
+  delete from auth.users
+  where email like 'aluno_e2e_%'
+     or email like 'aluno_visto_%'
+     or email like 'aluno_paulista_%'
+     or email like 'ana_maria_%'
+     or email like 'carlos_silva_%';
+end;
+$$ language plpgsql;
+
+revoke execute on function public.clean_test_data() from public;
+grant execute on function public.clean_test_data() to authenticated;

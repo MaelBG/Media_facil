@@ -1,10 +1,38 @@
 import { test, expect } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Carrega variáveis do .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 test.describe('Portal Acadêmico - Média Fácil', () => {
   
   test.beforeEach(async ({ page }) => {
     // Acessa a página de login
     await page.goto('/');
+  });
+
+  test.afterEach(async () => {
+    // Limpeza obrigatória do banco de dados após cada teste (deleta turmas e alunos de E2E)
+    if (supabaseUrl && supabaseAnonKey) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        // Autentica como professor para poder rodar a função
+        const { data } = await supabase.auth.signInWithPassword({
+          email: 'professor@escola.com',
+          password: '123'
+        });
+        if (data?.session) {
+          await supabase.rpc('clean_test_data');
+        }
+      } catch (err) {
+        console.error('Erro na limpeza pós-teste:', err);
+      }
+    }
   });
 
   test('Deve exibir erro ao tentar logar com credenciais inválidas', async ({ page }) => {
