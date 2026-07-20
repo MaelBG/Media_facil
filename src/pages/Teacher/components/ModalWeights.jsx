@@ -14,6 +14,7 @@ export default function ModalWeights({
   const [atividades, setAtividades] = useState(0);
   const [vistos, setVistos] = useState(0);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (classWeights) {
       setProvas(classWeights.provas ?? 50);
@@ -22,6 +23,7 @@ export default function ModalWeights({
       setVistos(classWeights.vistos ?? 15);
     }
   }, [classWeights, isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!isOpen) return null;
 

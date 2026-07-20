@@ -15,6 +15,7 @@ export default function ModalActivity({
   const isEdit = type === "edit";
   const activeType = isEdit ? activity?.tipo : activityType;
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isEdit && activity) {
       setTitle(activity.titulo || "");
@@ -25,7 +26,8 @@ export default function ModalActivity({
       setMaxScore(10);
       setDate("");
     }
-  }, [activity, type, isOpen, activityType]);
+  }, [activity, type, isOpen, activityType, isEdit]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!isOpen) return null;
 

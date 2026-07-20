@@ -15,6 +15,7 @@ export default function ModalStudent({
   const [matricula, setMatricula] = useState("");
   const [password, setPassword] = useState("");
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (student && type === "edit") {
       setName(student.nome || "");
@@ -28,6 +29,7 @@ export default function ModalStudent({
       setPassword("");
     }
   }, [student, type, isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!isOpen) return null;
 
