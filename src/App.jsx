@@ -53,6 +53,7 @@ export default function App() {
   const [studentActiveTab, setStudentActiveTab] = useState("general_progress"); // 'general_progress' | 'subject_detail'
   const [allMateriasAvg, setAllMateriasAvg] = useState({});
   const [allMateriasReports, setAllMateriasReports] = useState({});
+  const [loadingData, setLoadingData] = useState(false);
 
   const syncStateFromUrl = useCallback(async (user = currentUser) => {
     const params = new URLSearchParams(window.location.search);
@@ -134,30 +135,40 @@ export default function App() {
 
 
   async function loadStudentData(studentId, targetClassId) {
-    const report = await dbService.getStudentReport(studentId, targetClassId);
-    setStudentReport(report);
-    // Calcular médias e relatórios de todas as matérias
-    if (report?.materias && report.materias.length > 0) {
-      const avgs = {};
-      const reports = {};
-      await Promise.all(report.materias.map(async (materia) => {
-        try {
-          const r = await dbService.getStudentReport(studentId, materia.id);
-          reports[materia.id] = r;
-          avgs[materia.id] = calcWeightedAvg(r);
-        } catch (e) {
-          console.error("Erro ao carregar materia: " + materia.id, e);
-          avgs[materia.id] = "0.0";
-        }
-      }));
-      setAllMateriasReports(reports);
-      setAllMateriasAvg(avgs);
+    setLoadingData(true);
+    try {
+      const report = await dbService.getStudentReport(studentId, targetClassId);
+      setStudentReport(report);
+      // Calcular médias e relatórios de todas as matérias
+      if (report?.materias && report.materias.length > 0) {
+        const avgs = {};
+        const reports = {};
+        await Promise.all(report.materias.map(async (materia) => {
+          try {
+            const r = await dbService.getStudentReport(studentId, materia.id);
+            reports[materia.id] = r;
+            avgs[materia.id] = calcWeightedAvg(r);
+          } catch (e) {
+            console.error("Erro ao carregar materia: " + materia.id, e);
+            avgs[materia.id] = "0.0";
+          }
+        }));
+        setAllMateriasReports(reports);
+        setAllMateriasAvg(avgs);
+      }
+    } finally {
+      setLoadingData(false);
     }
   };
 
   async function loadTeacherData(profId) {
-    const userClasses = await dbService.getClasses(profId);
-    setClasses(userClasses);
+    setLoadingData(true);
+    try {
+      const userClasses = await dbService.getClasses(profId);
+      setClasses(userClasses);
+    } finally {
+      setLoadingData(false);
+    }
   };
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
 
@@ -203,30 +214,35 @@ export default function App() {
   }, []);
 
   async function loadClassData(classId) {
-    const [
-      classStudents,
-      classActivities,
-      classGrades,
-      classWeeks,
-      classVistos,
-      classObj
-    ] = await Promise.all([
-      dbService.getStudentsByClass(classId),
-      dbService.getActivitiesByClass(classId),
-      dbService.getGradesByClass(classId),
-      dbService.getWeeksByClass(classId),
-      dbService.getVistosByClass(classId),
-      dbService.getClassById(classId)
-    ]);
-    
-    setStudents(classStudents);
-    setActivities(classActivities);
-    setGrades(classGrades);
-    setWeeks(classWeeks);
-    setVistos(classVistos);
+    setLoadingData(true);
+    try {
+      const [
+        classStudents,
+        classActivities,
+        classGrades,
+        classWeeks,
+        classVistos,
+        classObj
+      ] = await Promise.all([
+        dbService.getStudentsByClass(classId),
+        dbService.getActivitiesByClass(classId),
+        dbService.getGradesByClass(classId),
+        dbService.getWeeksByClass(classId),
+        dbService.getVistosByClass(classId),
+        dbService.getClassById(classId)
+      ]);
+      
+      setStudents(classStudents);
+      setActivities(classActivities);
+      setGrades(classGrades);
+      setWeeks(classWeeks);
+      setVistos(classVistos);
 
-    if (classObj && classObj.pesos) {
-      setClassWeights(classObj.pesos);
+      if (classObj && classObj.pesos) {
+        setClassWeights(classObj.pesos);
+      }
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -383,6 +399,7 @@ export default function App() {
               setActiveTab={setActiveTab}
               showAddClassModal={showAddClassModal}
               setShowAddClassModal={setShowAddClassModal}
+              loading={loadingData}
             />
           </div>
         )}
@@ -408,6 +425,7 @@ export default function App() {
               navigateTo={navigateTo}
               classWeights={classWeights}
               setClassWeights={setClassWeights}
+              loading={loadingData}
             />
           </div>
         )}
@@ -439,6 +457,7 @@ export default function App() {
               allMateriasReports={allMateriasReports}
               allMateriasAvg={allMateriasAvg}
               navigateTo={navigateTo}
+              loading={loadingData}
             />
           </div>
         )}

@@ -177,10 +177,12 @@ export default function Sidebar({
 
         {/* Profile Card & Theme Toggle & Logout */}
         <div className="border-t border-outline-variant pt-4 space-y-1">
-          <div 
+          <button 
+            type="button"
             onClick={() => navigateTo({ view: "teacher_profile" })}
-            className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-container-high rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-container-high rounded-xl transition-all text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             title="Configurações de Perfil"
+            aria-label="Configurações de Perfil"
           >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${currentUser?.avatar_cor || "bg-primary"} shrink-0`}>
               {currentUser?.nome ? currentUser.nome.split(" ").map(n => n[0]).join("") : "P"}
@@ -189,7 +191,7 @@ export default function Sidebar({
               <p className="text-sm font-bold text-on-surface leading-tight truncate">{currentUser?.nome}</p>
               <p className="text-[11px] text-on-surface-variant truncate">{currentUser?.email}</p>
             </div>
-          </div>
+          </button>
           <button 
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             className="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container-high rounded-xl transition-all font-semibold text-left text-sm cursor-pointer"
@@ -317,10 +319,12 @@ export default function Sidebar({
       </div>
 
       <div className="border-t border-outline-variant pt-4 space-y-1">
-        <div 
+        <button 
+          type="button"
           onClick={() => navigateTo({ view: "student_profile" })}
-          className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-container-high rounded-xl transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-container-high rounded-xl transition-all text-left focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none"
           title="Configurações de Perfil"
+          aria-label="Configurações de Perfil"
         >
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${currentUser?.avatar_cor || "bg-secondary"} shrink-0`}>
             {currentUser?.nome ? currentUser.nome.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : "A"}
@@ -329,7 +333,7 @@ export default function Sidebar({
             <p className="text-sm font-bold text-on-surface leading-tight truncate">{currentUser?.nome}</p>
             <p className="text-[11px] text-on-surface-variant truncate">RM: {currentUser?.matricula || studentReport?.aluno?.matricula || "N/A"}</p>
           </div>
-        </div>
+        </button>
         <button 
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           className="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container-high rounded-xl transition-all font-semibold text-left text-sm cursor-pointer"

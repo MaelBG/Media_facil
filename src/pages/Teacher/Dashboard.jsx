@@ -18,7 +18,8 @@ export default function TeacherDashboard({
   navigateTo,
   setActiveTab,
   showAddClassModal,
-  setShowAddClassModal
+  setShowAddClassModal,
+  loading
 }) {
   // Add Class States
   const [newClassName, setNewClassName] = useState("");
@@ -148,7 +149,9 @@ export default function TeacherDashboard({
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-on-surface">Minhas Turmas</h2>
           
-          {classes.length === 0 ? (
+          {loading ? (
+            <TeacherDashboardSkeleton />
+          ) : classes.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 border border-surface-container text-center text-on-surface-variant">
               <School className="w-12 h-12 mx-auto text-outline-variant mb-3" />
               <p className="font-semibold">Nenhuma turma criada ainda.</p>
@@ -170,7 +173,17 @@ export default function TeacherDashboard({
                       navigateTo({ view: "teacher_class", classId: cls.id });
                       setActiveTab("boletim");
                     }}
-                    className="bg-primary-container/10 p-6 rounded-2xl border border-white hover:border-primary-container/30 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer flex flex-col justify-between h-44 group relative"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigateTo({ view: "teacher_class", classId: cls.id });
+                        setActiveTab("boletim");
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Acessar diário de classe da turma ${cls.nome}`}
+                    className="bg-primary-container/10 p-6 rounded-2xl border border-white hover:border-primary-container/30 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer flex flex-col justify-between h-44 group relative focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                   >
                     <div>
                       <div className="flex justify-between items-start mb-2">
@@ -373,5 +386,25 @@ export default function TeacherDashboard({
         </div>
       )}
     </main>
+  );
+}
+
+function TeacherDashboardSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse" aria-hidden="true">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="bg-surface-container-low/40 p-6 rounded-2xl border border-surface-container/50 h-44 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <div className="w-14 h-5 bg-surface-container-high rounded-full"></div>
+              <div className="w-16 h-4 bg-surface-container-high rounded"></div>
+            </div>
+            <div className="w-3/4 h-6 bg-surface-container-high rounded mt-3"></div>
+            <div className="w-1/2 h-4 bg-surface-container-high rounded mt-2"></div>
+          </div>
+          <div className="w-full h-8 bg-surface-container-high rounded-lg mt-4"></div>
+        </div>
+      ))}
+    </div>
   );
 }

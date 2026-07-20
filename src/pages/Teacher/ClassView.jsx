@@ -28,7 +28,8 @@ export default function ClassView({
   vistos,
   loadClassData,
   classWeights,
-  setClassWeights
+  setClassWeights,
+  loading
 }) {
   // Search query
   const [searchQuery, setSearchQuery] = useState("");
@@ -474,7 +475,9 @@ export default function ClassView({
         </div>
 
         {/* TAB CONTENTS */}
-        {activeTab === "boletim" && (
+        {loading ? (
+          <ClassViewSkeleton />
+        ) : activeTab === "boletim" && (
           <TabBoletim
             students={filteredStudents}
             classWeights={classWeights}
@@ -570,5 +573,34 @@ export default function ClassView({
         setError={setWeightsError}
       />
     </main>
+  );
+}
+
+function ClassViewSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-surface-container overflow-hidden animate-pulse" aria-hidden="true">
+      <div className="px-6 py-4 bg-surface-container-low border-b border-surface-container h-14"></div>
+      <div className="p-6 space-y-6">
+        {/* Table Header Skeleton */}
+        <div className="grid grid-cols-5 gap-4 pb-2 border-b border-surface-container">
+          <div className="h-4 bg-surface-container-high rounded col-span-2"></div>
+          <div className="h-4 bg-surface-container-high rounded"></div>
+          <div className="h-4 bg-surface-container-high rounded"></div>
+          <div className="h-4 bg-surface-container-high rounded"></div>
+        </div>
+        {/* Table Rows Skeletons */}
+        {[1, 2, 3, 4, 5].map((row) => (
+          <div key={row} className="grid grid-cols-5 gap-4 py-3 border-b border-surface-container/50 last:border-0">
+            <div className="space-y-2 col-span-2">
+              <div className="h-4 bg-surface-container-high rounded w-3/4"></div>
+              <div className="h-3 bg-surface-container-high rounded w-1/2"></div>
+            </div>
+            <div className="h-8 bg-surface-container-high rounded-lg self-center"></div>
+            <div className="h-8 bg-surface-container-high rounded-lg self-center"></div>
+            <div className="h-8 bg-surface-container-high rounded-lg self-center"></div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

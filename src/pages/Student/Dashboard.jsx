@@ -6,7 +6,8 @@ export default function StudentDashboard({
   studentReport,
   allMateriasReports,
   allMateriasAvg,
-  navigateTo
+  navigateTo,
+  loading
 }) {
   const getStudentDashboardWeightedAverage = () => calcWeightedAvg(studentReport);
 
@@ -14,7 +15,9 @@ export default function StudentDashboard({
     <main className="ml-64 flex-1 p-10 min-h-screen bg-background">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        {studentActiveTab === "general_progress" ? (
+        {loading ? (
+          <StudentDashboardSkeleton />
+        ) : studentActiveTab === "general_progress" ? (
           <>
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -161,7 +164,7 @@ export default function StudentDashboard({
                         onClick={() => {
                           navigateTo({ view: "student_dashboard", studentTab: "subject_detail", subjectId: materia.id });
                         }}
-                        className="w-full mt-6 py-2.5 bg-secondary-container hover:bg-secondary-container/85 text-on-secondary-container font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
+                        className="w-full mt-6 py-2.5 bg-secondary-container hover:bg-secondary-container/85 text-on-secondary-container font-bold rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none"
                       >
                         <span>Ver Detalhes</span>
                         <ChevronRight className="w-4 h-4" />
@@ -615,5 +618,50 @@ export default function StudentDashboard({
         )}
       </div>
     </main>
+  );
+}
+
+function StudentDashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse" aria-hidden="true">
+      {/* Header Skeleton */}
+      <div className="space-y-2">
+        <div className="w-24 h-5 bg-surface-container-high rounded-full"></div>
+        <div className="w-48 h-8 bg-surface-container-high rounded"></div>
+        <div className="w-64 h-4 bg-surface-container-high rounded"></div>
+      </div>
+
+      {/* Bento Grid Stats Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-surface-container/50 h-28 flex flex-col justify-between">
+          <div className="w-1/2 h-4 bg-surface-container-high rounded"></div>
+          <div className="w-1/3 h-8 bg-surface-container-high rounded"></div>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-surface-container/50 h-28 flex flex-col justify-between">
+          <div className="w-2/3 h-4 bg-surface-container-high rounded"></div>
+          <div className="w-1/3 h-8 bg-surface-container-high rounded"></div>
+        </div>
+        <div className="bg-secondary/20 p-6 rounded-2xl border border-surface-container/50 h-28 flex flex-col justify-between">
+          <div className="w-1/2 h-4 bg-surface-container-high rounded"></div>
+          <div className="w-3/4 h-6 bg-surface-container-high rounded"></div>
+        </div>
+      </div>
+
+      {/* Cards List Skeleton */}
+      <div className="space-y-4">
+        <div className="w-32 h-6 bg-surface-container-high rounded"></div>
+        <div className="grid grid-cols-1 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white p-6 rounded-2xl border border-surface-container/50 h-28 flex items-center justify-between">
+              <div className="space-y-2 w-1/3">
+                <div className="w-full h-5 bg-surface-container-high rounded"></div>
+                <div className="w-1/2 h-4 bg-surface-container-high rounded"></div>
+              </div>
+              <div className="w-16 h-8 bg-surface-container-high rounded-full"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
