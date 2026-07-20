@@ -6,6 +6,13 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist']),
+  // Arquivos de configuração Node.js (ex: playwright.config.js, vite.config.js)
+  {
+    files: ['*.config.js', '*.config.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   {
     files: ['**/*.{js,jsx}'],
     extends: [
