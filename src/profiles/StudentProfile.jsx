@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { dbService } from "../db";
 import { User, Sparkles, Check, AlertTriangle } from "lucide-react";
 
-export default function StudentProfile({ currentUser, setCurrentUser, navigateTo, studentReport }) {
+export default function StudentProfile({ currentUser, setCurrentUser, navigateTo }) {
   const [profileNome, setProfileNome] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
   const [profileSenha, setProfileSenha] = useState("");
@@ -56,7 +56,7 @@ export default function StudentProfile({ currentUser, setCurrentUser, navigateTo
       } else {
         setProfileErrorMsg(res.error || "Ocorreu um erro ao atualizar o perfil.");
       }
-    } catch (err) {
+    } catch {
       setProfileErrorMsg("Erro de conexão ao salvar alterações.");
     } finally {
       setIsLoading(false);

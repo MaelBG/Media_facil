@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { dbService } from "../db";
 import { User, School, Sparkles, Check, AlertTriangle } from "lucide-react";
 
@@ -60,7 +60,7 @@ export default function TeacherProfile({ currentUser, setCurrentUser, navigateTo
       } else {
         setProfileErrorMsg(res.error || "Ocorreu um erro ao atualizar o perfil.");
       }
-    } catch (err) {
+    } catch {
       setProfileErrorMsg("Erro de conexão ao salvar alterações.");
     } finally {
       setIsLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { dbService } from "../../db";
 import { 
   Plus, 

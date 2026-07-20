@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { dbService } from "../db";
 import { School, AlertTriangle } from "lucide-react";
 
-export default function Login({ setCurrentUser, setView, navigateTo, loadTeacherData, loadStudentData }) {
+export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loadStudentData }) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -29,7 +29,7 @@ export default function Login({ setCurrentUser, setView, navigateTo, loadTeacher
       } else {
         setLoginError(res.error || "E-mail ou senha incorretos.");
       }
-    } catch (err) {
+    } catch {
       setLoginError("Erro ao conectar com o serviço de autenticação.");
     } finally {
       setIsLoading(false);

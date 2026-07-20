@@ -1,26 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { dbService } from "../../db";
 import { calcWeightedAvg } from "../../utils/calculations";
 import { 
   Plus, 
-  Users, 
   Search, 
   UserPlus, 
-  Check, 
   AlertTriangle,
-  ChevronRight, 
-  Sparkles, 
-  CalendarDays, 
   Sliders, 
   Edit, 
-  Trash2, 
-  FileText, 
-  GraduationCap, 
-  ClipboardList 
+  Trash2
 } from "lucide-react";
 
 export default function ClassView({
-  currentUser,
   selectedClassId,
   activeTab,
   setActiveTab,
@@ -31,7 +22,6 @@ export default function ClassView({
   weeks,
   vistos,
   loadClassData,
-  navigateTo,
   classWeights,
   setClassWeights
 }) {
@@ -82,10 +72,12 @@ export default function ClassView({
 
   // Sync inputs with weights when they change globally
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setInputWeightProvas(classWeights.provas);
     setInputWeightProvaPaulista(classWeights.prova_paulista ?? 20);
     setInputWeightAtividades(classWeights.atividades);
     setInputWeightVistos(classWeights.vistos);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [classWeights]);
 
   // Filters students by query

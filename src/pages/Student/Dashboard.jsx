@@ -1,9 +1,7 @@
-import React from "react";
 import { Award, FileText, Sliders, CalendarDays, ClipboardList, GraduationCap, Check, ChevronRight } from "lucide-react";
 import { calcWeightedAvg } from "../../utils/calculations";
 
 export default function StudentDashboard({
-  currentUser,
   studentActiveTab,
   studentReport,
   allMateriasReports,

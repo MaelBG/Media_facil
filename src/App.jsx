@@ -8,30 +8,7 @@ import Login from "./pages/Login";
 import TeacherDashboard from "./pages/Teacher/Dashboard";
 import ClassView from "./pages/Teacher/ClassView";
 import StudentDashboard from "./pages/Student/Dashboard";
-import { 
-  School, 
-  Plus, 
-  LogOut, 
-  Users, 
-  Search, 
-  UserPlus, 
-  Check, 
-  AlertTriangle,
-  Award, 
-  ChevronRight,
-  Sparkles,
-  Info,
-  CalendarDays,
-  GraduationCap,
-  ClipboardList,
-  Sliders,
-  FileText,
-  User,
-  Sun,
-  Moon,
-  Trash2,
-  Edit
-} from "lucide-react";
+
 
 const getInitialUser = () => {
   const localSession = localStorage.getItem("prof_gradebook_session");
@@ -112,7 +89,6 @@ export default function App() {
         await loadStudentData(user.id);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const navigateTo = useCallback((params = {}, replace = false) => {
