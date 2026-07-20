@@ -371,9 +371,18 @@ export const dbService = {
 
       if (authError) return { success: false, error: authError.message };
 
-      // 3. Aguarda o trigger criar o registro no banco público
+      // 3. Matricula o aluno recém-criado na turma
+      const { error: linkError } = await supabase
+        .from("turma_alunos")
+        .insert({ turma_id: classId, aluno_id: authData.user.id });
+
+      if (linkError) {
+        return { success: false, error: linkError.message };
+      }
+
+      // 4. Aguarda o trigger criar o registro no banco público (agora visível devido à matrícula)
       let studentProfile = null;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 15; i++) {
         const { data: p } = await supabase
           .from("perfis")
           .select("*")
@@ -389,11 +398,6 @@ export const dbService = {
       if (!studentProfile) {
         return { success: false, error: "Perfil do aluno não pôde ser criado automaticamente." };
       }
-
-      // 4. Matricula o aluno recém-criado na turma
-      await supabase
-        .from("turma_alunos")
-        .insert({ turma_id: classId, aluno_id: studentProfile.id });
 
       return { success: true, student: studentProfile, exists: false };
     } else {

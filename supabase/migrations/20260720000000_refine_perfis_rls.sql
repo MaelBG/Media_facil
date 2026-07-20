@@ -1,34 +1,41 @@
 -- ==========================================
--- REFINAMENTO DE SEGURANÇA RLS PARA PERFIS
+-- REFINAMENTO DE SEGURANÇA RLS PARA PERFIS (SEM RECURSÃO VIA FUNCTION)
 -- ==========================================
 
--- 1. Remove a política antiga e insegura
-drop policy if exists "Qualquer pessoa autenticada pode ler perfis" on public.perfis;
+-- 1. Cria a função auxiliar security definer para checar se o usuário é professor
+create or replace function public.is_professor(p_user_id uuid)
+returns boolean
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  return exists (
+    select 1 from public.perfis
+    where id = p_user_id and tipo = 'professor'
+  );
+end;
+$$ language plpgsql;
 
--- 2. Cria políticas restritas de leitura (Select)
+-- Revoga a execução pública por segurança, se desejar (opcional, mas recomendado)
+revoke execute on function public.is_professor(uuid) from public;
+grant execute on function public.is_professor(uuid) to authenticated;
+
+-- 2. Remove as políticas antigas
+drop policy if exists "Qualquer pessoa autenticada pode ler perfis" on public.perfis;
+drop policy if exists "Usuários podem ver seu próprio perfil" on public.perfis;
+drop policy if exists "Professores podem ver perfis de alunos de suas turmas" on public.perfis;
+drop policy if exists "Alunos podem ver perfis de professores de suas turmas" on public.perfis;
+drop policy if exists "Professores podem ver todos os perfis" on public.perfis;
+
+-- 3. Cria políticas restritas de leitura (Select)
 create policy "Usuários podem ver seu próprio perfil"
 on public.perfis for select
 to authenticated
 using (auth.uid() = id);
 
-create policy "Professores podem ver perfis de alunos de suas turmas"
+create policy "Professores podem ver todos os perfis"
 on public.perfis for select
 to authenticated
 using (
-  id in (
-    select ta.aluno_id from public.turma_alunos ta
-    join public.turmas t on ta.turma_id = t.id
-    where t.professor_id = auth.uid()
-  )
-);
-
-create policy "Alunos podem ver perfis de professores de suas turmas"
-on public.perfis for select
-to authenticated
-using (
-  id in (
-    select t.professor_id from public.turma_alunos ta
-    join public.turmas t on ta.turma_id = t.id
-    where ta.aluno_id = auth.uid()
-  )
+  public.is_professor(auth.uid())
 );

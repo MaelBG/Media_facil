@@ -94,32 +94,34 @@ alter table public.vistos_semanais enable row level security;
 -- POLÍTICAS DE SEGURANÇA (RLS)
 -- ==========================================
 
+-- FUNÇÃO AUXILIAR PARA RLS (SECURITY DEFINER PARA EVITAR RECURSÃO)
+create or replace function public.is_professor(p_user_id uuid)
+returns boolean
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  return exists (
+    select 1 from public.perfis
+    where id = p_user_id and tipo = 'professor'
+  );
+end;
+$$ language plpgsql;
+
+revoke execute on function public.is_professor(uuid) from public;
+grant execute on function public.is_professor(uuid) to authenticated;
+
 -- POLÍTICAS PARA PERFIS
 create policy "Usuários podem ver seu próprio perfil"
 on public.perfis for select
 to authenticated
 using (auth.uid() = id);
 
-create policy "Professores podem ver perfis de alunos de suas turmas"
+create policy "Professores podem ver todos os perfis"
 on public.perfis for select
 to authenticated
 using (
-  id in (
-    select ta.aluno_id from public.turma_alunos ta
-    join public.turmas t on ta.turma_id = t.id
-    where t.professor_id = auth.uid()
-  )
-);
-
-create policy "Alunos podem ver perfis de professores de suas turmas"
-on public.perfis for select
-to authenticated
-using (
-  id in (
-    select t.professor_id from public.turma_alunos ta
-    join public.turmas t on ta.turma_id = t.id
-    where ta.aluno_id = auth.uid()
-  )
+  public.is_professor(auth.uid())
 );
 
 create policy "Usuários podem atualizar seus próprios perfis"
@@ -132,7 +134,7 @@ create policy "Professores podem inserir perfis de alunos"
 on public.perfis for insert
 to authenticated
 with check (
-  (select tipo from public.perfis where id = auth.uid()) = 'professor'
+  public.is_professor(auth.uid())
 );
 
 -- POLÍTICAS PARA TURMAS

@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { dbService } from "./db";
 import { calcWeightedAvg } from "./utils/calculations";
 import Sidebar from "./components/Sidebar";
-import TeacherProfile from "./profiles/TeacherProfile";
-import StudentProfile from "./profiles/StudentProfile";
 import Login from "./pages/Login";
-import TeacherDashboard from "./pages/Teacher/Dashboard";
-import ClassView from "./pages/Teacher/ClassView";
-import StudentDashboard from "./pages/Student/Dashboard";
+
+const TeacherProfile = lazy(() => import("./profiles/TeacherProfile"));
+const StudentProfile = lazy(() => import("./profiles/StudentProfile"));
+const TeacherDashboard = lazy(() => import("./pages/Teacher/Dashboard"));
+const ClassView = lazy(() => import("./pages/Teacher/ClassView"));
+const StudentDashboard = lazy(() => import("./pages/Student/Dashboard"));
 
 
 const getInitialUser = () => {
@@ -367,96 +368,107 @@ export default function App() {
         />
       )}
 
-      {/* 2. VIEW: TEACHER DASHBOARD (Painel do Professor) */}
-      {view === "teacher_dashboard" && (
-        <div className="flex">
-          {/* Sidebar */}
-          {renderSidebar()}
+      <Suspense fallback={<PageLoader />}>
+        {/* 2. VIEW: TEACHER DASHBOARD (Painel do Professor) */}
+        {view === "teacher_dashboard" && (
+          <div className="flex">
+            {/* Sidebar */}
+            {renderSidebar()}
 
-          <TeacherDashboard
-            currentUser={currentUser}
-            classes={classes}
-            loadTeacherData={loadTeacherData}
-            navigateTo={navigateTo}
-            setActiveTab={setActiveTab}
-            showAddClassModal={showAddClassModal}
-            setShowAddClassModal={setShowAddClassModal}
-          />
-        </div>
-      )}
+            <TeacherDashboard
+              currentUser={currentUser}
+              classes={classes}
+              loadTeacherData={loadTeacherData}
+              navigateTo={navigateTo}
+              setActiveTab={setActiveTab}
+              showAddClassModal={showAddClassModal}
+              setShowAddClassModal={setShowAddClassModal}
+            />
+          </div>
+        )}
 
-      {/* 3. VIEW: TEACHER CLASS (Lançamento de Notas de Provas, Atividades e Vistos) */}
-      {view === "teacher_class" && (
-        <div className="flex">
-          {/* Sidebar */}
-          {renderSidebar()}
+        {/* 3. VIEW: TEACHER CLASS (Lançamento de Notas de Provas, Atividades e Vistos) */}
+        {view === "teacher_class" && (
+          <div className="flex">
+            {/* Sidebar */}
+            {renderSidebar()}
 
-          <ClassView
-            currentUser={currentUser}
-            selectedClassId={selectedClassId}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            classes={classes}
-            students={students}
-            activities={activities}
-            grades={grades}
-            weeks={weeks}
-            vistos={vistos}
-            loadClassData={loadClassData}
-            navigateTo={navigateTo}
-            classWeights={classWeights}
-            setClassWeights={setClassWeights}
-          />
-        </div>
-      )}
+            <ClassView
+              currentUser={currentUser}
+              selectedClassId={selectedClassId}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              classes={classes}
+              students={students}
+              activities={activities}
+              grades={grades}
+              weeks={weeks}
+              vistos={vistos}
+              loadClassData={loadClassData}
+              navigateTo={navigateTo}
+              classWeights={classWeights}
+              setClassWeights={setClassWeights}
+            />
+          </div>
+        )}
 
-      {/* 3.5. VIEW: TEACHER PROFILE (Configurações de Perfil do Professor) */}
-      {view === "teacher_profile" && (
-        <div className="flex">
-          {/* Sidebar */}
-          {renderSidebar()}
+        {/* 3.5. VIEW: TEACHER PROFILE (Configurações de Perfil do Professor) */}
+        {view === "teacher_profile" && (
+          <div className="flex">
+            {/* Sidebar */}
+            {renderSidebar()}
 
-          <TeacherProfile
-            currentUser={currentUser}
-            setCurrentUser={setCurrentUser}
-            navigateTo={navigateTo}
-          />
-        </div>
-      )}
+            <TeacherProfile
+              currentUser={currentUser}
+              setCurrentUser={setCurrentUser}
+              navigateTo={navigateTo}
+            />
+          </div>
+        )}
 
-      {/* 4. VIEW: STUDENT DASHBOARD (Portal do Aluno) */}
-      {view === "student_dashboard" && (
-        <div className="flex">
-          {/* Sidebar */}
-          {renderSidebar()}
+        {/* 4. VIEW: STUDENT DASHBOARD (Portal do Aluno) */}
+        {view === "student_dashboard" && (
+          <div className="flex">
+            {/* Sidebar */}
+            {renderSidebar()}
 
-          <StudentDashboard
-            currentUser={currentUser}
-            studentActiveTab={studentActiveTab}
-            studentReport={studentReport}
-            allMateriasReports={allMateriasReports}
-            allMateriasAvg={allMateriasAvg}
-            navigateTo={navigateTo}
-          />
-        </div>
-      )}
+            <StudentDashboard
+              currentUser={currentUser}
+              studentActiveTab={studentActiveTab}
+              studentReport={studentReport}
+              allMateriasReports={allMateriasReports}
+              allMateriasAvg={allMateriasAvg}
+              navigateTo={navigateTo}
+            />
+          </div>
+        )}
 
-      {/* 4.5. VIEW: STUDENT PROFILE (Configurações de Perfil do Aluno) */}
-      {view === "student_profile" && (
-        <div className="flex">
-          {/* Sidebar */}
-          {renderSidebar()}
+        {/* 4.5. VIEW: STUDENT PROFILE (Configurações de Perfil do Aluno) */}
+        {view === "student_profile" && (
+          <div className="flex">
+            {/* Sidebar */}
+            {renderSidebar()}
 
-          <StudentProfile
-            currentUser={currentUser}
-            setCurrentUser={setCurrentUser}
-            navigateTo={navigateTo}
-            studentReport={studentReport}
-          />
-        </div>
-      )}
+            <StudentProfile
+              currentUser={currentUser}
+              setCurrentUser={setCurrentUser}
+              navigateTo={navigateTo}
+              studentReport={studentReport}
+            />
+          </div>
+        )}
+      </Suspense>
+    </div>
+  );
+}
 
-
+function PageLoader() {
+  return (
+    <div className="flex-1 min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider animate-pulse">Carregando...</p>
+      </div>
     </div>
   );
 }
