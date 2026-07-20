@@ -274,4 +274,217 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     await logoutBtn.click({ force: true });
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
+
+  test('Deve logar como Professor, navegar pelo painel e realizar logout com sucesso', async ({ page }) => {
+    await page.fill('input[type="email"]', 'professor@escola.com');
+    await page.fill('input[type="password"]', '123');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('h1')).toContainText('Olá,');
+
+    const logoutBtn = page.locator('aside button:has-text("Sair da Conta")').first();
+    await expect(logoutBtn).toBeVisible();
+    await logoutBtn.click({ force: true });
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
+  });
+
+  test('Deve marcar visto de caderno para um aluno e persistir alteração', async ({ page }) => {
+    await page.fill('input[type="email"]', 'professor@escola.com');
+    await page.fill('input[type="password"]', '123');
+    await page.click('button[type="submit"]');
+
+    await page.click('button:has-text("Nova Turma")');
+    const classIdName = `Turma Visto E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: 3º Ano - Técnico em DS"]', classIdName);
+    await page.fill('input[placeholder="2026"]', '2026');
+    await page.click('button:has-text("Criar Turma")');
+
+    await page.click(`text=${classIdName}`);
+
+    await page.click('button:has-text("Cadastrar Aluno")');
+    const studentMatricula = `RM${Date.now().toString().slice(-6)}`;
+    const studentName = `Aluno Visto E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: Ana Clara"]', studentName);
+    await page.fill('input[placeholder="DS3A99"]', studentMatricula);
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_visto_${Date.now()}@escola.com`);
+    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.click('button:has-text("Salvar Cadastro")');
+    await expect(page.locator(`text=${studentName}`)).toBeVisible();
+
+    await page.click('button:has-text("Controle de Vistos Semanais (Caderno)")');
+    await page.click('button:has-text("Adicionar Semana")');
+    await expect(page.locator('th:has-text("Semana 1")')).toBeVisible();
+
+    const studentRow = page.locator('tr', { hasText: studentName }).first();
+    const checkbox = studentRow.locator('input[type="checkbox"]').first();
+    await checkbox.click();
+    await page.waitForTimeout(400);
+
+    await page.click('button:has-text("Visão Geral & Boletim")');
+    await page.click('button:has-text("Controle de Vistos Semanais (Caderno)")');
+    await expect(checkbox).toBeChecked();
+
+    await page.click('button:has-text("Visão Geral & Boletim")');
+    const studentCellInBoletim = page.locator('tr', { hasText: studentName }).first();
+    await studentCellInBoletim.hover();
+    page.once('dialog', async (dialog) => {
+      await dialog.accept();
+    });
+    await studentCellInBoletim.locator('button[title="Remover da Turma"]').click();
+
+    await page.click('aside button:has-text("Turmas")');
+    const classCard = page.locator(`div.group:has-text("${classIdName}")`).first();
+    await classCard.hover();
+    await classCard.locator('button[title="Excluir Turma"]').click();
+    await page.fill('input[placeholder="Digite o nome da turma para confirmar"]', classIdName);
+    await page.click('button:has-text("Excluir Permanentemente")');
+  });
+
+  test('Deve criar coluna de Prova Paulista, lançar nota e verificar reflexo no boletim consolidado', async ({ page }) => {
+    await page.fill('input[type="email"]', 'professor@escola.com');
+    await page.fill('input[type="password"]', '123');
+    await page.click('button[type="submit"]');
+
+    await page.click('button:has-text("Nova Turma")');
+    const classIdName = `Turma Paulista E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: 3º Ano - Técnico em DS"]', classIdName);
+    await page.fill('input[placeholder="2026"]', '2026');
+    await page.click('button:has-text("Criar Turma")');
+
+    await page.click(`text=${classIdName}`);
+
+    await page.click('button:has-text("Cadastrar Aluno")');
+    const studentMatricula = `RM${Date.now().toString().slice(-6)}`;
+    const studentName = `Aluno Paulista E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: Ana Clara"]', studentName);
+    await page.fill('input[placeholder="DS3A99"]', studentMatricula);
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_paulista_${Date.now()}@escola.com`);
+    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.click('button:has-text("Salvar Cadastro")');
+
+    await page.locator('button:has-text("Pesos: Provas/Projetos")').click();
+    await page.locator('label:has-text("Peso das Provas / Projetos (%)") + input').fill('40');
+    await page.locator('label:has-text("Peso da Prova Paulista (%)") + input').fill('30');
+    await page.locator('label:has-text("Peso das Atividades (%)") + input').fill('15');
+    await page.locator('label:has-text("Peso dos Vistos do Caderno (%)") + input').fill('15');
+    await page.click('button:has-text("Salvar Pesos")');
+
+    await page.click('button:has-text("Prova Paulista (0 a 10)")');
+    await page.click('button:has-text("Nova Prova Paulista")');
+    const examTitle = `Paulista E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: Prova Paulista 1º Bimestre"]', examTitle);
+    await page.fill('input[type="number"]', '10');
+    await page.click('button:has-text("Criar Coluna")');
+
+    await expect(page.locator(`th:has-text("${examTitle}")`)).toBeVisible();
+
+    const studentRow = page.locator('tr', { hasText: studentName }).first();
+    const gradeInput = studentRow.locator('input[placeholder="--"]').first();
+    await gradeInput.fill('8.0');
+    await page.waitForTimeout(400);
+
+    await page.click('button:has-text("Visão Geral & Boletim")');
+    const boletimRow = page.locator('tr', { hasText: studentName }).first();
+    await expect(boletimRow.locator('span[class*="text-primary"]').first()).toContainText('3.9');
+
+    await boletimRow.hover();
+    page.once('dialog', async (dialog) => {
+      await dialog.accept();
+    });
+    await boletimRow.locator('button[title="Remover da Turma"]').click();
+
+    await page.click('aside button:has-text("Turmas")');
+    const classCard = page.locator(`div.group:has-text("${classIdName}")`).first();
+    await classCard.hover();
+    await classCard.locator('button[title="Excluir Turma"]').click();
+    await page.fill('input[placeholder="Digite o nome da turma para confirmar"]', classIdName);
+    await page.click('button:has-text("Excluir Permanentemente")');
+  });
+
+  test('Deve logar como Aluno, acessar detalhes de uma disciplina e validar boletim detalhado com cálculo step-by-step', async ({ page }) => {
+    await page.fill('input[type="email"]', 'ana@escola.com');
+    await page.fill('input[type="password"]', '123');
+    await page.click('button[type="submit"]');
+
+    await page.click('button:has-text("Ver Detalhes")');
+
+    await expect(page.locator('h1')).toContainText('Painel de Rendimento');
+    
+    await expect(page.locator('h3:has-text("Notas de Provas / Projetos")').or(page.locator('h3:has-text("Notas de Provas/Projetos")'))).toBeVisible();
+    await expect(page.locator('h3:has-text("Notas de Prova Paulista")')).toBeVisible();
+    await expect(page.locator('h3:has-text("Entrega de Atividades (Checklist)")')).toBeVisible();
+    await expect(page.locator('h3:has-text("Grade de Vistos Semanais do Caderno")')).toBeVisible();
+
+    await expect(page.locator('text=Composição da Nota:')).toBeVisible();
+    await expect(page.locator('text=Média Final =')).toBeVisible();
+
+    const statusBadge = page.locator('span:has-text("Situação:") + span');
+    await expect(statusBadge).toBeVisible();
+    await expect(statusBadge.locator('text=Aprovado').or(statusBadge.locator('text=Recuperação')).or(statusBadge.locator('text=Reprovado'))).toBeVisible();
+
+    await page.locator('aside button:has-text("Meu Progresso")').click();
+    await expect(page.locator('h1')).toContainText('Meu Progresso');
+  });
+
+  test('Deve filtrar alunos dinamicamente através do campo de busca no diário de classe do Professor', async ({ page }) => {
+    await page.fill('input[type="email"]', 'professor@escola.com');
+    await page.fill('input[type="password"]', '123');
+    await page.click('button[type="submit"]');
+
+    await page.click('button:has-text("Nova Turma")');
+    const classIdName = `Turma Busca E2E_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: 3º Ano - Técnico em DS"]', classIdName);
+    await page.fill('input[placeholder="2026"]', '2026');
+    await page.click('button:has-text("Criar Turma")');
+
+    await page.click(`text=${classIdName}`);
+
+    await page.click('button:has-text("Cadastrar Aluno")');
+    const student1Matricula = `RM1111_${Date.now().toString().slice(-4)}`;
+    const student1Name = `Ana Maria_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: Ana Clara"]', student1Name);
+    await page.fill('input[placeholder="DS3A99"]', student1Matricula);
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `ana_maria_${Date.now()}@escola.com`);
+    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.click('button:has-text("Salvar Cadastro")');
+
+    await page.click('button:has-text("Cadastrar Aluno")');
+    const student2Matricula = `RM2222_${Date.now().toString().slice(-4)}`;
+    const student2Name = `Carlos Silva_${Date.now()}`;
+    await page.fill('input[placeholder="Ex: Ana Clara"]', student2Name);
+    await page.fill('input[placeholder="DS3A99"]', student2Matricula);
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `carlos_silva_${Date.now()}@escola.com`);
+    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.click('button:has-text("Salvar Cadastro")');
+
+    await page.fill('input[placeholder="Buscar aluno por nome ou matrícula"]', 'Ana Maria');
+    await expect(page.locator(`text=${student1Name}`)).toBeVisible();
+    await expect(page.locator(`text=${student2Name}`)).not.toBeVisible();
+
+    await page.fill('input[placeholder="Buscar aluno por nome ou matrícula"]', student2Matricula);
+    await expect(page.locator(`text=${student1Name}`)).not.toBeVisible();
+    await expect(page.locator(`text=${student2Name}`)).toBeVisible();
+
+    await page.fill('input[placeholder="Buscar aluno por nome ou matrícula"]', '');
+    await expect(page.locator(`text=${student1Name}`)).toBeVisible();
+    await expect(page.locator(`text=${student2Name}`)).toBeVisible();
+
+    const row1 = page.locator('tr', { hasText: student1Name }).first();
+    await row1.hover();
+    page.once('dialog', async (dialog) => { await dialog.accept(); });
+    await row1.locator('button[title="Remover da Turma"]').click();
+
+    const row2 = page.locator('tr', { hasText: student2Name }).first();
+    await row2.hover();
+    page.once('dialog', async (dialog) => { await dialog.accept(); });
+    await row2.locator('button[title="Remover da Turma"]').click();
+
+    await page.click('aside button:has-text("Turmas")');
+    const classCard = page.locator(`div.group:has-text("${classIdName}")`).first();
+    await classCard.hover();
+    await classCard.locator('button[title="Excluir Turma"]').click();
+    await page.fill('input[placeholder="Digite o nome da turma para confirmar"]', classIdName);
+    await page.click('button:has-text("Excluir Permanentemente")');
+  });
 });
+
