@@ -28,5 +28,12 @@ dist-ssr
 .env.local
 *.env.local
 
-# Sensitive Student Data
+# Playwright E2E Test Artifacts
+test-results/
+playwright-report/
+
+# Sensitive Student Data (Local docs and lists)
+docs/
 alunos_*.md
+
+

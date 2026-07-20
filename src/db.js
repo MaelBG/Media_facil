@@ -138,6 +138,13 @@ function getLocalDB() {
         }
       });
     }
+    if (db.perfis) {
+      const ana = db.perfis.find(p => p.email && p.email.toLowerCase() === "ana@escola.com");
+      if (ana && ana.senha !== "123") {
+        ana.senha = "123";
+        changed = true;
+      }
+    }
     if (changed) {
       saveLocalDB(db);
     }
