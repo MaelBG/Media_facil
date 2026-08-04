@@ -117,20 +117,19 @@ export default function ClassView({
   // Activity average score (0 to 10 scale based on deliveries percentage)
   const getStudentActivityScore = (alunoId) => {
     const atividadesClass = activities.filter(a => a.tipo === "atividade");
-    if (atividadesClass.length === 0) return 10.0; // Padrão: nota máxima se sem tarefas agendadas
+    if (atividadesClass.length === 0) return 0.0;
 
     const atividadeIds = atividadesClass.map(a => a.id);
-    const alunoDeliveries = grades.filter(g => 
+    const alunoGrades = grades.filter(g => 
       g.aluno_id === alunoId && 
       atividadeIds.includes(g.atividade_id) && 
-      g.valor_obtido !== null &&
-      g.valor_obtido > 0
+      g.valor_obtido !== null
     );
 
-    const entregasCount = alunoDeliveries.length;
-    const totalCount = atividadesClass.length;
+    const somaObtida = alunoGrades.reduce((sum, g) => sum + Number(g.valor_obtido || 0), 0);
+    const somaMaxima = atividadesClass.reduce((sum, a) => sum + Number(a.valor_maximo || 0), 0);
 
-    return (entregasCount / totalCount) * 10;
+    return somaMaxima > 0 ? (somaObtida / somaMaxima) * 10 : 0.0;
   };
 
   // Text representation for student activity deliveries count
@@ -146,7 +145,10 @@ export default function ClassView({
       g.valor_obtido > 0
     );
 
-    return `${alunoDeliveries.length}/${atividadesClass.length} entregas`;
+    const entregasCount = alunoDeliveries.length;
+    const totalCount = atividadesClass.length;
+
+    return `${entregasCount} de ${totalCount} entregues`;
   };
 
   // Notebook vistos score (0 to 10 scale based on vistos percentage)
@@ -162,12 +164,12 @@ export default function ClassView({
 
   // Pondered final average calculation using utility function
   const getStudentWeightedAverage = (alunoId) => {
-    const studentGrades = grades.filter(g => g.aluno_id === alunoId).map(g => {
-      const act = activities.find(a => a.id === g.atividade_id);
+    const studentGrades = activities.map(act => {
+      const g = grades.find(grade => grade.aluno_id === alunoId && grade.atividade_id === act.id);
       return {
-        tipo: act?.tipo,
-        valor_obtido: g.valor_obtido,
-        valor_maximo: act?.valor_maximo
+        tipo: act.tipo,
+        valor_obtido: g ? g.valor_obtido : null,
+        valor_maximo: act.valor_maximo
       };
     });
 

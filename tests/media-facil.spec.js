@@ -169,9 +169,9 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     const boletimStudentRow = page.locator('tr', { hasText: editedStudentName }).first();
     // Confirma a média final recalculada:
     // (8.0 obtidos de 10.0 máx nas Provas * Peso 40%) -> 3.2
-    // (Atividades zeradas/sem itens padrão = 10.0 * Peso 15%) -> 1.5
-    // Média ponderada esperada: 4.7
-    await expect(boletimStudentRow.locator('span[class*="text-primary"]').first()).toContainText('4.7');
+    // (Atividades zeradas/sem itens padrão = 0.0 * Peso 15%) -> 0.0
+    // Média ponderada esperada: 3.2
+    await expect(boletimStudentRow.locator('span[class*="text-primary"]').first()).toContainText('3.2');
 
     // 8. ENTREGA DE ATIVIDADES (CHECKLIST)
     await page.click('button:has-text("Entrega de Atividades (Checklist)")');
@@ -414,7 +414,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
 
     await page.click('button:has-text("Visão Geral & Boletim")');
     const boletimRow = page.locator('tr', { hasText: studentName }).first();
-    await expect(boletimRow.locator('span[class*="text-primary"]').first()).toContainText('3.9');
+    await expect(boletimRow.locator('span[class*="text-primary"]').first()).toContainText('2.4');
 
     await boletimRow.hover();
     page.once('dialog', async (dialog) => {
