@@ -38,7 +38,7 @@ const tempSupabase = isSupabaseConfigured
 
 const SEED_DATA = {
   perfis: [
-    { id: "prof-1", nome: "Prof. Ismael", email: "professor@escola.com", tipo: "professor", senha: "123", escola: "Etec de Vila Carrão", semestre: "Semestre 2026.1", avatar_cor: "bg-primary" },
+    { id: "prof-1", nome: "Prof. Ismael Filho", email: "ismaelfilho@professor.com", tipo: "professor", senha: "123", escola: "Etec de Vila Carrão", semestre: "Semestre 2026.1", avatar_cor: "bg-primary" },
     { id: "alu-1", nome: "Ana Silva", email: "ana@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A01" },
     { id: "alu-2", nome: "Bruno Santos", email: "bruno@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A02" },
     { id: "alu-3", nome: "Carla Oliveira", email: "carla@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A03" },

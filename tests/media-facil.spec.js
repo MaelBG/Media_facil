@@ -24,8 +24,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
         // Autentica como professor para poder rodar a função
         const { data } = await supabase.auth.signInWithPassword({
-          email: 'professor@escola.com',
-          password: '123'
+          email: 'ismaelfilho@professor.com',
+          password: '123456'
         });
         if (data?.session) {
           await supabase.rpc('clean_test_data');
@@ -49,8 +49,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
 
   test('Deve abrir perfil do Professor, alterar cor do avatar e validar reatividade', async ({ page }) => {
     // Login
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     // Abre configurações de perfil
@@ -69,8 +69,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
 
   test('Deve logar como Professor e realizar fluxo completo de Turma, Alunos, Provas e Vistos', async ({ page }) => {
     // 1. LOGIN
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     // Verifica se entrou no dashboard do professor
@@ -305,8 +305,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve logar como Professor, navegar pelo painel e realizar logout com sucesso', async ({ page }) => {
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     await expect(page.locator('h1')).toContainText('Olá,');
@@ -318,8 +318,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve marcar visto de caderno para um aluno e persistir alteração', async ({ page }) => {
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     await page.click('button:has-text("Nova Turma")');
@@ -370,8 +370,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve criar coluna de Prova Paulista, lançar nota e verificar reflexo no boletim consolidado', async ({ page }) => {
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     await page.click('button:has-text("Nova Turma")');
@@ -456,8 +456,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve filtrar alunos dinamicamente através do campo de busca no diário de classe do Professor', async ({ page }) => {
-    await page.fill('input[type="email"]', 'professor@escola.com');
-    await page.fill('input[type="password"]', '123');
+    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
+    await page.fill('input[type="password"]', '123456');
     await page.click('button[type="submit"]');
 
     await page.click('button:has-text("Nova Turma")');

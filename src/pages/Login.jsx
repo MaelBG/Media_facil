@@ -88,8 +88,8 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
 
   const handleQuickLogin = (role) => {
     if (role === "professor") {
-      setEmail("professor@escola.com");
-      setSenha("123");
+      setEmail("ismaelfilho@professor.com");
+      setSenha("123456");
     } else {
       setEmail("ana@escola.com");
       setSenha("123");
@@ -135,7 +135,7 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ex: professor@escola.com" 
+              placeholder="Ex: ismaelfilho@professor.com" 
               required
               disabled={isLoading || isLockedOut}
               className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
