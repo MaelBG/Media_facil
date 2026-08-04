@@ -611,12 +611,12 @@ export const dbService = {
         .select("semana")
         .eq("turma_id", classId)
         .order("semana", { ascending: true });
-      if (!data || data.length === 0) return [1, 2, 3, 4];
+      if (!data) return [];
       return data.map(w => w.semana);
     } else {
       const db = getLocalDB();
       const turmaSemanas = db.semanas_turma.find(s => s.classId === classId);
-      return turmaSemanas ? turmaSemanas.semanas : [1, 2, 3, 4];
+      return turmaSemanas ? turmaSemanas.semanas : [];
     }
   },
 

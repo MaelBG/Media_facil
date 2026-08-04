@@ -12,40 +12,34 @@ export const calcWeightedAvg = (report) => {
   if (!report) return "0.0";
   
   // 1. Provas / Projetos
-  const provas = report.notas.filter(n => n.tipo === "prova" && n.valor_obtido !== null);
+  const provas = report.notas ? report.notas.filter(n => n.tipo === "prova") : [];
   let pAvg = 0.0;
   if (provas.length > 0) {
-    const somaO = provas.reduce((s, n) => s + n.valor_obtido, 0);
-    const somaM = provas.reduce((s, n) => s + n.valor_maximo, 0);
-    pAvg = (somaO / somaM) * 10;
+    const somaO = provas.reduce((s, n) => s + (n.valor_obtido || 0), 0);
+    const somaM = provas.reduce((s, n) => s + (n.valor_maximo || 0), 0);
+    pAvg = somaM > 0 ? (somaO / somaM) * 10 : 0.0;
   }
 
   // 2. Prova Paulista
-  const paulista = report.notas.filter(n => n.tipo === "prova_paulista" && n.valor_obtido !== null);
+  const paulista = report.notas ? report.notas.filter(n => n.tipo === "prova_paulista") : [];
   let paulistaAvg = 0.0;
   if (paulista.length > 0) {
-    const somaO = paulista.reduce((s, n) => s + n.valor_obtido, 0);
-    const somaM = paulista.reduce((s, n) => s + n.valor_maximo, 0);
-    paulistaAvg = (somaO / somaM) * 10;
+    const somaO = paulista.reduce((s, n) => s + (n.valor_obtido || 0), 0);
+    const somaM = paulista.reduce((s, n) => s + (n.valor_maximo || 0), 0);
+    paulistaAvg = somaM > 0 ? (somaO / somaM) * 10 : 0.0;
   }
 
   // 3. Atividades / Checklist
-  const atividades = report.notas.filter(n => n.tipo === "atividade");
-  let aScore = 10.0;
+  const atividades = report.notas ? report.notas.filter(n => n.tipo === "atividade") : [];
+  let aScore = 0.0;
   if (atividades.length > 0) {
-    let somaObtida = 0;
-    let somaMaxima = 0;
-    atividades.forEach(n => {
-      if (n.valor_obtido !== null) {
-        somaObtida += Number(n.valor_obtido);
-      }
-      somaMaxima += Number(n.valor_maximo);
-    });
-    aScore = somaMaxima > 0 ? (somaObtida / somaMaxima) * 10 : 10.0;
+    const somaO = atividades.reduce((s, n) => s + (n.valor_obtido || 0), 0);
+    const somaM = atividades.reduce((s, n) => s + (n.valor_maximo || 0), 0);
+    aScore = somaM > 0 ? (somaO / somaM) * 10 : 0.0;
   }
 
   // 4. Controle de Vistos Semanais
-  let vScore = 10.0;
+  let vScore = 0.0;
   if (report.vistos && report.vistos.length > 0) {
     const concluidos = report.vistos.filter(v => v.status === true).length;
     vScore = (concluidos / report.vistos.length) * 10;
