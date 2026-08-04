@@ -15,17 +15,11 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
   const [failedAttempts, setFailedAttempts] = useState(() => {
     return Number(sessionStorage.getItem("login_failed_attempts") || 0);
   });
-  const [lockoutRemainingSec, setLockoutRemainingSec] = useState(0);
-
-  useEffect(() => {
+  const [lockoutRemainingSec, setLockoutRemainingSec] = useState(() => {
     const lockoutUntil = Number(sessionStorage.getItem("login_lockout_until") || 0);
     const now = Date.now();
-
-    if (lockoutUntil > now) {
-      const remaining = Math.ceil((lockoutUntil - now) / 1000);
-      setLockoutRemainingSec(remaining);
-    }
-  }, []);
+    return lockoutUntil > now ? Math.ceil((lockoutUntil - now) / 1000) : 0;
+  });
 
   useEffect(() => {
     if (lockoutRemainingSec <= 0) return;
