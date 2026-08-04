@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { dbService } from "./db";
 import { calcWeightedAvg } from "./utils/calculations";
 import Sidebar from "./components/Sidebar";
@@ -372,6 +373,7 @@ export default function App() {
 
   return (
     <div className="font-sans min-h-screen text-on-surface bg-background antialiased selection:bg-primary-container selection:text-on-primary-container">
+      <SpeedInsights />
       
       {/* 1. VIEW DE LOGIN */}
       {view === "login" && (
