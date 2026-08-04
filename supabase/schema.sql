@@ -128,7 +128,10 @@ create policy "Usuários podem atualizar seus próprios perfis"
 on public.perfis for update
 to authenticated
 using (auth.uid() = id)
-with check (auth.uid() = id);
+with check (
+  auth.uid() = id
+  and tipo = (select p.tipo from public.perfis p where p.id = auth.uid())
+);
 
 create policy "Professores podem inserir perfis de alunos"
 on public.perfis for insert

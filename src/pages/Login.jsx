@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { dbService } from "../db";
-import { School, AlertTriangle } from "lucide-react";
+import { School, AlertTriangle, ShieldAlert } from "lucide-react";
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 60 * 1000; // 60 segundos
 
 export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loadStudentData }) {
   const [email, setEmail] = useState("");
@@ -8,14 +11,56 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
   const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Rate Limiting / Lockout State
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    return Number(sessionStorage.getItem("login_failed_attempts") || 0);
+  });
+  const [lockoutRemainingSec, setLockoutRemainingSec] = useState(0);
+
+  useEffect(() => {
+    const lockoutUntil = Number(sessionStorage.getItem("login_lockout_until") || 0);
+    const now = Date.now();
+
+    if (lockoutUntil > now) {
+      const remaining = Math.ceil((lockoutUntil - now) / 1000);
+      setLockoutRemainingSec(remaining);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (lockoutRemainingSec <= 0) return;
+
+    const timer = setInterval(() => {
+      setLockoutRemainingSec(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          sessionStorage.removeItem("login_lockout_until");
+          sessionStorage.setItem("login_failed_attempts", "0");
+          setFailedAttempts(0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutRemainingSec]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (lockoutRemainingSec > 0) return;
+
     setLoginError("");
     setIsLoading(true);
 
     try {
       const res = await dbService.login(email, senha);
       if (res.success) {
+        // Reset failed attempts on success
+        sessionStorage.removeItem("login_failed_attempts");
+        sessionStorage.removeItem("login_lockout_until");
+        setFailedAttempts(0);
+
         setCurrentUser(res.user);
         if (res.user.tipo === "professor") {
           await loadTeacherData(res.user.id);
@@ -27,7 +72,18 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
         setEmail("");
         setSenha("");
       } else {
-        setLoginError(res.error || "E-mail ou senha incorretos.");
+        const nextAttempts = failedAttempts + 1;
+        setFailedAttempts(nextAttempts);
+        sessionStorage.setItem("login_failed_attempts", String(nextAttempts));
+
+        if (nextAttempts >= MAX_FAILED_ATTEMPTS) {
+          const lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+          sessionStorage.setItem("login_lockout_until", String(lockoutUntil));
+          setLockoutRemainingSec(60);
+          setLoginError("Muitas tentativas incorretas. Acesso bloqueado temporariamente por 60 segundos.");
+        } else {
+          setLoginError(`${res.error || "E-mail ou senha incorretos."} (${MAX_FAILED_ATTEMPTS - nextAttempts} tentativa(s) restante(s))`);
+        }
       }
     } catch {
       setLoginError("Erro ao conectar com o serviço de autenticação.");
@@ -46,6 +102,8 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
     }
   };
 
+  const isLockedOut = lockoutRemainingSec > 0;
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-surface-container-low">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-surface-container overflow-hidden p-8">
@@ -57,11 +115,23 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
           <p className="text-on-surface-variant text-sm mt-1">Acesso ao Portal Acadêmico</p>
         </div>
 
-        {loginError && (
-          <div className="mb-4 p-3 bg-error-container text-on-error-container rounded-xl flex items-center gap-2 text-sm font-semibold">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{loginError}</span>
+        {isLockedOut ? (
+          <div className="mb-4 p-4 bg-error-container text-on-error-container rounded-xl flex items-start gap-3 text-sm font-semibold border border-error/20">
+            <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Acesso Bloqueado Temporariamente</p>
+              <p className="text-xs mt-1 font-normal opacity-90">
+                Por segurança, aguarde <span className="font-extrabold">{lockoutRemainingSec}s</span> antes de tentar novamente.
+              </p>
+            </div>
           </div>
+        ) : (
+          loginError && (
+            <div className="mb-4 p-3 bg-error-container text-on-error-container rounded-xl flex items-center gap-2 text-sm font-semibold">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )
         )}
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -73,8 +143,8 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Ex: professor@escola.com" 
               required
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              disabled={isLoading || isLockedOut}
+              className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
             />
           </div>
 
@@ -86,17 +156,21 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               onChange={(e) => setSenha(e.target.value)}
               placeholder="Sua senha" 
               required
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              disabled={isLoading || isLockedOut}
+              className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
             />
           </div>
 
           <button 
             type="submit" 
-            disabled={isLoading}
-            className="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 text-sm cursor-pointer disabled:opacity-55"
+            disabled={isLoading || isLockedOut}
+            className="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 text-sm cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Entrando..." : "Entrar no Portal"}
+            {isLockedOut 
+              ? `Bloqueado (${lockoutRemainingSec}s)` 
+              : isLoading 
+              ? "Entrando..." 
+              : "Entrar no Portal"}
           </button>
         </form>
 
@@ -108,14 +182,16 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               <button 
                 type="button"
                 onClick={() => { handleQuickLogin("professor"); }}
-                className="px-3 py-2 bg-primary-container/20 hover:bg-primary-container/30 text-on-primary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
+                disabled={isLockedOut}
+                className="px-3 py-2 bg-primary-container/20 hover:bg-primary-container/30 text-on-primary-container text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
               >
                 Modo Professor
               </button>
               <button 
                 type="button"
                 onClick={() => { handleQuickLogin("aluno"); }}
-                className="px-3 py-2 bg-secondary-container/20 hover:bg-secondary-container/30 text-on-secondary-container text-xs font-bold rounded-xl transition-all cursor-pointer"
+                disabled={isLockedOut}
+                className="px-3 py-2 bg-secondary-container/20 hover:bg-secondary-container/30 text-on-secondary-container text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
               >
                 Modo Aluno
               </button>
