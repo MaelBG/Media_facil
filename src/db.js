@@ -46,8 +46,9 @@ const SEED_DATA = {
     { id: "alu-5", nome: "Elena Souza", email: "elena@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-2", turma_ids: ["turma-2"], matricula: "INF202" }
   ],
   turmas: [
-    { id: "turma-1", nome: "3º Ano - Desenvolvimento de Sistemas", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-2", nome: "2º Ano - Informática para Internet", ano: "2026", professor_id: "prof-1" }
+    { id: "turma-1", nome: "2º Ano E", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-2", nome: "2º Ano B", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-3", nome: "3º Ano C", ano: "2026", professor_id: "prof-1" }
   ],
   atividades: [
     { id: "at-1", titulo: "Atividade 1: Estrutura React Native", tipo: "atividade", valor_maximo: 10, turma_id: "turma-1", data_entrega: "2026-05-15" },
@@ -73,7 +74,8 @@ const SEED_DATA = {
   ],
   semanas_turma: [
     { classId: "turma-1", semanas: [1, 2, 3, 4, 5] },
-    { classId: "turma-2", semanas: [1, 2, 3, 4] }
+    { classId: "turma-2", semanas: [1, 2, 3, 4] },
+    { classId: "turma-3", semanas: [1, 2, 3, 4] }
   ],
   vistos_semanais: [
     { aluno_id: "alu-1", class_id: "turma-1", semana: 1, status: true },

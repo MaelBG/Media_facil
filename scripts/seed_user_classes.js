@@ -17,23 +17,53 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function seed() {
   const teacherEmail = "ismaelfilho@professor.com";
+  const teacherPassword = "123456";
 
-  console.log(`Buscando perfil do professor: ${teacherEmail}...`);
-  const { data: profProfiles, error: profError } = await supabase
-    .from("perfis")
-    .select("*")
-    .eq("email", teacherEmail);
+  console.log(`Autenticando como professor ${teacherEmail}...`);
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: teacherEmail,
+    password: teacherPassword
+  });
 
-  if (profError || !profProfiles || profProfiles.length === 0) {
-    console.error("❌ Perfil do professor não encontrado na tabela public.perfis!", profError?.message);
+  if (authError || !authData?.user) {
+    console.error("❌ Falha na autenticação do professor:", authError?.message);
     process.exit(1);
   }
 
-  const profProfile = profProfiles[0];
+  const teacherId = authData.user.id;
+  console.log(`✅ Professor autenticado com sucesso! ID: ${teacherId}`);
 
-  const teacherId = profProfile.id;
-  console.log(`✅ Professor encontrado! ID: ${teacherId}`);
+  // Garante que existe registro na tabela public.perfis
+  let { data: profProfile } = await supabase
+    .from("perfis")
+    .select("*")
+    .eq("id", teacherId)
+    .maybeSingle();
 
+  if (!profProfile) {
+    console.log("Criando registro do professor na tabela public.perfis...");
+    const { error: insErr } = await supabase
+      .from("perfis")
+      .upsert({
+        id: teacherId,
+        nome: "Prof. Ismael Filho",
+        email: teacherEmail,
+        tipo: "professor",
+        escola: "Etec de Vila Carrão",
+        semestre: "Semestre 2026.1",
+        avatar_cor: "bg-primary"
+      })
+      .select()
+      .single();
+
+    if (insErr) {
+      console.error("Erro ao criar perfil em public.perfis:", insErr.message);
+    } else {
+      console.log("Perfil criado na tabela public.perfis com sucesso!");
+    }
+  }
+
+  // Turmas a serem criadas
   const targetClasses = [
     { nome: "2º Ano E", ano: "2026" },
     { nome: "2º Ano B", ano: "2026" },
@@ -43,7 +73,6 @@ async function seed() {
   for (const c of targetClasses) {
     console.log(`\nVerificando/Criando turma: "${c.nome}"...`);
     
-    // Verifica se já existe
     const { data: existingClass } = await supabase
       .from("turmas")
       .select("*")
@@ -51,10 +80,8 @@ async function seed() {
       .eq("nome", c.nome)
       .maybeSingle();
 
-    let classId;
     if (existingClass) {
       console.log(`ℹ️ Turma "${c.nome}" já existe. ID: ${existingClass.id}`);
-      classId = existingClass.id;
     } else {
       const { data: newClass, error: createError } = await supabase
         .from("turmas")
@@ -72,13 +99,13 @@ async function seed() {
         continue;
       }
 
-      classId = newClass.id;
-      console.log(`🎉 Turma "${c.nome}" criada com sucesso! ID: ${classId}`);
+      const classId = newClass.id;
+      console.log(`🎉 Turma "${c.nome}" criada no Supabase! ID: ${classId}`);
 
       // Adiciona 4 semanas padrão para a nova turma
       await supabase
         .from("semanas_turma")
-        .insert([
+        .upsert([
           { turma_id: classId, semana: 1 },
           { turma_id: classId, semana: 2 },
           { turma_id: classId, semana: 3 },
@@ -87,7 +114,7 @@ async function seed() {
     }
   }
 
-  console.log("\n🚀 Todas as turmas (2E, 2B, 3C) foram configuradas para o seu perfil no Supabase!");
+  console.log("\n🚀 Todas as turmas (2º Ano E, 2º Ano B, 3º Ano C) cadastradas e ativas no Supabase!");
 }
 
 seed();
