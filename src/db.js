@@ -46,9 +46,13 @@ const SEED_DATA = {
     { id: "alu-5", nome: "Elena Souza", email: "elena@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-2", turma_ids: ["turma-2"], matricula: "INF202" }
   ],
   turmas: [
-    { id: "turma-1", nome: "2º Ano E", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-2", nome: "2º Ano B", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-3", nome: "3º Ano C", ano: "2026", professor_id: "prof-1" }
+    { id: "turma-1", nome: "2ºE - Redes de Computadores", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-2e-2", nome: "2ºE - Lógica e Linguagem de Programação", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-2b-1", nome: "2ºB - Carreira e Competências", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-2b-2", nome: "2ºB - Redes de Computadores", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-3c-1", nome: "3ºC - Programação Mobile", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-3c-2", nome: "3ºC - Versionamento de Código", ano: "2026", professor_id: "prof-1" },
+    { id: "turma-3c-3", nome: "3ºC - Sistemas de Mensageria", ano: "2026", professor_id: "prof-1" }
   ],
   atividades: [
     { id: "at-1", titulo: "Atividade 1: Estrutura React Native", tipo: "atividade", valor_maximo: 10, turma_id: "turma-1", data_entrega: "2026-05-15" },
