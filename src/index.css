@@ -51,39 +51,50 @@ body {
   vertical-align: middle;
 }
 
-/* Modo Escuro (Dark Mode) */
+/* Modo Escuro Premium (Dark Mode) */
 .dark {
-  --color-surface: #0f1115;
-  --color-surface-dim: #090a0d;
-  --color-surface-bright: #1c1f26;
-  --color-surface-container-lowest: #0b0c10;
-  --color-surface-container-low: #15181f;
-  --color-surface-container: #1b1e25;
-  --color-surface-container-high: #21252f;
-  --color-surface-container-highest: #282e3a;
-  --color-on-surface: #f0f1f5;
-  --color-on-surface-variant: #b0b4c3;
+  --color-surface: #111318;
+  --color-surface-dim: #0c0e12;
+  --color-surface-bright: #1c2029;
+  --color-surface-container-lowest: #181b22;
+  --color-surface-container-low: #14171e;
+  --color-surface-container: #1d212b;
+  --color-surface-container-high: #242936;
+  --color-surface-container-highest: #2c3242;
+  --color-on-surface: #f3f4f8;
+  --color-on-surface-variant: #9ea5b8;
 
-  --color-background: #0f1115;
-  --color-on-background: #f0f1f5;
+  --color-background: #0d0f14;
+  --color-on-background: #f3f4f8;
 
-  --color-outline: #8c8f9f;
-  --color-outline-variant: #343845;
+  --color-outline: #8c93a6;
+  --color-outline-variant: #2d3342;
 
-  --color-primary: #a3c4f3;
-  --color-primary-container: #1c3452;
-  --color-on-primary: #072242;
-  --color-on-primary-container: #d2e4ff;
+  --color-primary: #7da8e6;
+  --color-primary-container: #1b3454;
+  --color-on-primary: #0a1e36;
+  --color-on-primary-container: #d4e4fd;
 
-  --color-secondary: #8ed3b9;
-  --color-secondary-container: #173b30;
-  --color-on-secondary: #05241b;
-  --color-on-secondary-container: #b3f0d5;
+  --color-secondary: #6ec4a6;
+  --color-secondary-container: #13392f;
+  --color-on-secondary: #052119;
+  --color-on-secondary-container: #b8f2db;
+
+  --color-tertiary: #dfb295;
+  --color-tertiary-container: #3c2a1e;
+  --color-on-tertiary-container: #fae4d4;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #4a1517;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
 }
 
+/* Ajustes gerais de superfícies e cartões no Dark Mode */
 .dark .bg-white {
   background-color: var(--color-surface-container-lowest) !important;
   color: var(--color-on-surface) !important;
+  border-color: var(--color-outline-variant);
 }
 
 .dark input[type="text"],
@@ -95,16 +106,28 @@ body {
 .dark textarea {
   color: var(--color-on-surface) !important;
   background-color: var(--color-surface-container-low) !important;
+  border-color: var(--color-outline-variant) !important;
 }
 
+.dark input::placeholder {
+  color: var(--color-outline) !important;
+  opacity: 0.7;
+}
+
+/* Tabelas e Linhas */
 .dark table {
   color: var(--color-on-surface) !important;
 }
 
 .dark tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(255, 255, 255, 0.035) !important;
 }
 
+.dark td, .dark th {
+  border-color: var(--color-outline-variant) !important;
+}
+
+/* Containers de superfície */
 .dark .bg-surface-container {
   background-color: var(--color-surface-container) !important;
 }
@@ -113,23 +136,61 @@ body {
   background-color: var(--color-surface-container-low) !important;
 }
 
+.dark .bg-surface-container-high {
+  background-color: var(--color-surface-container-high) !important;
+}
+
 .dark .bg-background {
   background-color: var(--color-background) !important;
 }
 
-.dark .border-outline-variant {
-  border-color: var(--color-outline-variant) !important;
-}
-
-.dark .border-surface-container {
-  border-color: var(--color-outline-variant) !important;
-}
-
+.dark .border-outline-variant,
+.dark .border-surface-container,
 .dark .border-white {
   border-color: var(--color-outline-variant) !important;
 }
 
-.dark ::placeholder {
-  color: var(--color-outline) !important;
-  opacity: 0.7;
+/* Badges de Situação do Aluno no Dark Mode */
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.18) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+.dark .text-amber-800 {
+  color: #fcd34d !important;
+}
+
+.dark .bg-error-container {
+  background-color: var(--color-error-container) !important;
+  color: var(--color-on-error-container) !important;
+}
+
+.dark .text-on-error-container {
+  color: #ffb4ab !important;
+}
+
+.dark .bg-secondary-container {
+  background-color: var(--color-secondary-container) !important;
+  color: var(--color-on-secondary-container) !important;
+}
+
+.dark .text-on-secondary-container {
+  color: var(--color-on-secondary-container) !important;
+}
+
+.dark .bg-primary-container {
+  background-color: var(--color-primary-container) !important;
+  color: var(--color-on-primary-container) !important;
+}
+
+.dark .text-on-primary-container {
+  color: var(--color-on-primary-container) !important;
+}
+
+/* Modais e Caixas de Diálogo */
+.dark .shadow-xl,
+.dark .shadow-md,
+.dark .shadow-sm {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important;
 }
