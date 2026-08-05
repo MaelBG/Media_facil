@@ -1,108 +1,130 @@
 [![Continuous Integration](https://github.com/MaelBG/Media_facil/actions/workflows/ci.yml/badge.svg)](https://github.com/MaelBG/Media_facil/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?logo=tailwindcss)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)
+![Vite](https://img.shields.io/badge/Vite-v8-646CFF?logo=vite)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-# 🎓 Média Fácil — Portal de Notas Acadêmico
+# Média Fácil — Sistema de Gestão e Rendimento Acadêmico
 
-> **Média Fácil** é uma plataforma escolar moderna, fluida e intuitiva desenvolvida para desonerar a carga cognitiva de professores e alunos. O sistema simplifica o acompanhamento de notas, o registro de vistos em cadernos e o cálculo automático de médias ponderadas complexas.
-
----
-
-## 🚀 Principais Funcionalidades
-
-### 👨‍🏫 Painel do Professor
-* **Gestão de Turmas:** Criação e acompanhamento de múltiplas turmas de forma independente.
-* **Fórmula de Média Personalizável:** Configure pesos específicos (em %) para:
-  * Provas Tradicionais.
-  * Prova Paulista (sistema padrão de avaliação do estado).
-  * Atividades Práticas.
-  * Vistos em Cadernos.
-* **Boletim Interativo:** Grade de notas em tempo real com salvamento automático e validação de limites de pontuação.
-* **Controle Semanal de Vistos:** Gestão de vistos de caderno organizada por semanas letivas dinâmicas.
-* **Cadastro Integrado de Alunos:** Criação de contas de alunos direto pelo painel de forma simplificada, gerando credenciais automáticas de acesso.
-
-### 👩‍🎓 Painel do Aluno
-* **Painel de Rendimento:** Acompanhamento transparente do boletim individual em tempo real.
-* **Cálculo da Média Ponderada:** Visualização detalhada do impacto de cada tipo de avaliação na média final.
-* **Painel de Vistos:** Histórico visual de cadernos verificados e pendências de vistos por semana.
-* **Interface Responsiva:** Design limpo e adaptado para visualização em celulares.
-
-### 🔌 Arquitetura Híbrida Inteligente
-* **Fallback Local Automático:** Se as chaves do Supabase não forem detectadas no ambiente, o sistema executa perfeitamente em modo de simulação utilizando `localStorage`.
-* **Sincronização Cloud:** Com o `.env` configurado, o aplicativo conecta-se diretamente à infraestrutura Supabase.
+> **Média Fácil** é uma plataforma educacional desenvolvida para otimizar a rotina docente e oferecer transparência ao acompanhamento acadêmico dos estudantes. O sistema automatiza o cálculo de médias ponderadas, o registro de vistos em cadernos e a gestão contínua de turmas e avaliações.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## Principais Diferenciais
 
-* **Frontend:** [React 18](https://react.dev/) + [Vite](https://vite.dev/) (Rápido HMR e Build Otimizado)
-* **Estilização:** [TailwindCSS](https://tailwindcss.com/) (Interface minimalista e responsiva baseado em tokens do Material 3)
-* **Banco de Dados & Autenticação:** [Supabase](https://supabase.com/) (PostgreSQL, GoTrue Auth e RLS)
-* **Ícones:** [Lucide React](https://lucide.dev/)
+* **Desempenho e Sincronização em Tempo Real:** Construído com React 19 e Supabase (PostgreSQL), garantindo atualização instantânea e salvamento automático das notas.
+* **Ordenação Multicritério:** Classificação dinâmica das turmas por Nome (A-Z / Z-A), Média Final Ponderada ou notas de componentes específicos (Provas, Prova Paulista, Atividades e Vistos).
+* **Fórmula de Média Configurável:** Definição de pesos percentuais para Provas/Projetos, Prova Paulista, Entregas de Atividades e Vistos do Caderno com normalização automática.
+* **Arquitetura de Segurança RLS:** Isolamento de dados entre turmas via Row Level Security (RLS) e funções no esquema `private` (`SECURITY DEFINER`) para evitar recursão no Postgres.
+* **Arquitetura Híbrida (Cloud e Local Fallback):** Funciona integrado ao Supabase ou em modo offline utilizando `localStorage` caso as variáveis de ambiente não estejam presentes.
+* **Modo Escuro (Dark Mode):** Interface adaptável com contraste calibrado para reduzir o cansaço visual em usos prolongados.
+* **Proteção de Acesso:** Rate limiting contra tentativas incorretas de login (lockout temporário de 60s) e convenção de e-mails institucionais por escola (`@barao.com` e `@diogenes.com`).
 
 ---
 
-## 📁 Estrutura de Banco de Dados (Supabase)
+## Funcionalidades da Plataforma
 
-O banco de dados é governado por regras de integridade e políticas de segurança granulares:
+### Portal do Professor
+
+* **Gestão de Turmas:**
+  * Organização de turmas por sala e ano letivo.
+  * Resumo com total de matriculados e média geral da sala.
+* **Diário de Classe em Abas:**
+  * **Visão Geral & Boletim:** Planilha consolidada com médias parciais, média final e situação do aluno (*Aprovado*, *Recuperação*, *Reprovado*).
+  * **Provas & Projetos:** Lançamento numérico com limites validados e pesos ponderados.
+  * **Prova Paulista:** Lançamento específico para avaliações padronizadas estaduais.
+  * **Entrega de Atividades:** Checklist de entregas com pontuação dinâmica.
+  * **Controle de Vistos Semanais:** Acompanhamento por semanas letivas do caderno dos estudantes.
+* **Gestão de Alunos:**
+  * Cadastro simplificado, edição de dados e remoção com atualização imediata da chamada.
+
+### Portal do Aluno
+
+* **Painel de Rendimento Individual:** Visualização transparente das notas por disciplina e situação acadêmica.
+* **Detalhamento da Média:** Transparência sobre o impacto de cada componente (Provas, Atividades, Vistos) no resultado final.
+* **Acompanhamento de Cadernos:** Registro das semanas com vistos confirmados e pendências.
+* **Interface Responsiva:** Adaptada para navegação em dispositivos móveis e desktops.
+
+---
+
+## Stack Tecnológica
+
+| Camada | Tecnologia | Descrição |
+| :--- | :--- | :--- |
+| **Interface** | React 19 | Componentização reativa de alto desempenho |
+| **Ferramenta de Build** | Vite 8 | Servidor de desenvolvimento rápido e bundler otimizado |
+| **Estilização** | TailwindCSS 4 | Estilização utility-first com suporte a tokens de design e Dark Mode |
+| **Backend / Banco** | Supabase | PostgreSQL com GoTrue Auth e políticas de RLS |
+| **Ícones** | Lucide React | Biblioteca de ícones vetoriais |
+| **Testes e CI** | Playwright / GitHub Actions | Testes end-to-end e integração contínua |
+
+---
+
+## Estrutura do Banco de Dados
 
 ```mermaid
 erDiagram
-    PERFIS ||--o{ TURMAS : "ensina"
+    PERFIS ||--o{ TURMAS : "ministra"
     PERFIS ||--o{ TURMA_ALUNOS : "matriculado"
-    TURMAS ||--o{ TURMA_ALUNOS : "contem"
+    TURMAS ||--o{ TURMA_ALUNOS : "compoe"
     TURMAS ||--o{ ATIVIDADES : "possui"
     TURMAS ||--o{ SEMANAS_TURMA : "divide"
     ATIVIDADES ||--o{ NOTAS : "recebe"
     PERFIS ||--o{ NOTAS : "obtem"
-    PERFIS ||--o{ VISTOS_SEMANAIS : "recebe"
+    PERFIS ||--o{ VISTOS_SEMANAIS : "registra"
     TURMAS ||--o{ VISTOS_SEMANAIS : "avalia"
 ```
 
-### Detalhes das Políticas de Segurança (RLS)
-Para evitar o problema comum de **recursão infinita** nas políticas relacionais do Postgres, o sistema adota um esquema de segurança avançado:
-* **Esquema Privado (`private`):** Encapsula funções de checagem com privilégios de `SECURITY DEFINER` (bypass RLS apenas para validação de posse):
-  * `private.is_professor_of_turma(turma_id, user_id)`: Valida se o usuário é o docente da turma.
-  * `private.is_aluno_in_turma(turma_id, user_id)`: Valida se o estudante está matriculado na turma.
-* **RLS em Todas as Tabelas:** Nenhuma leitura ou escrita é exposta ao client-side sem verificação explícita do token JWT (`auth.uid()`).
+### Segurança e RLS
+Para evitar recursão em políticas de acesso com tabelas N:N (`turma_alunos`), as checagens de permissão são encapsuladas em funções no esquema privado `private` com privilégios `SECURITY DEFINER`:
+
+* `private.is_professor_of_turma(p_turma_id, p_user_id)`: Valida se o usuário logado é o docente da turma.
+* `private.is_aluno_in_turma(p_turma_id, p_user_id)`: Valida o vínculo do aluno com a turma.
 
 ---
 
-## 💻 Configuração e Instalação Local
+## Instalação e Execução Local
 
-### 1. Requisitos Prévios
-* [Node.js](https://nodejs.org/) (Versão 18 ou superior)
-* Conta no [Supabase](https://supabase.com/) (opcional, para modo nuvem)
+### 1. Pré-requisitos
+* Node.js 18 ou superior
+* npm ou yarn
 
 ### 2. Clonar e Instalar Dependências
 ```bash
-# Clone o repositório
-git clone <url-do-repositorio>
+git clone https://github.com/MaelBG/Media_facil.git
 cd Media_facil
-
-# Instale as dependências
 npm install
 ```
 
 ### 3. Variáveis de Ambiente
-Crie um arquivo `.env` na raiz do projeto com suas credenciais do Supabase (use o modelo `.env.example` como base):
+Crie um arquivo `.env` na raiz do projeto (baseado em `.env.example`):
 ```env
 VITE_SUPABASE_URL=https://seu-projeto.supabase.co
 VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica-aqui
 ```
 
-### 4. Inicializar o Banco de Dados (Caso use Supabase)
-Execute o script presente em `supabase/schema.sql` no **SQL Editor** do seu painel do Supabase para criar as tabelas, triggers de sincronização de auth e políticas de RLS.
-
-### 5. Executar o Aplicativo
+### 4. Executar em Desenvolvimento
 ```bash
-# Iniciar o servidor local de desenvolvimento
 npm run dev
 ```
-Acesse `http://localhost:5173/` no seu navegador.
+
+### 5. Build de Produção
+```bash
+npm run build
+```
 
 ---
 
-## 🎨 Diretrizes de Design
-O design foi construído sobre o conceito **Serene Academic Interface** detalhado no guia `DESIGN.md`. A paleta de cores foca em tons pastéis de alta acessibilidade para reduzir o cansaço visual após horas de uso letivo:
-* **Primary (Serenity Blue):** `#3b608c` - Estabilidade e foco acadêmico.
-* **Secondary (Mint Green):** `#366758` - Progresso positivo e conclusão.
-* **Surface Background:** Tons frios neutros de `#f9f9fa` a `#e2e2e3`.
+## Diretrizes de Design
+A interface utiliza a paleta **Serene Academic** focada em acessibilidade e ergonomia visual:
+
+* **Primary:** `#3b608c`
+* **Secondary:** `#366758`
+* **Modo Escuro:** Cores frias de superfície (`#111318` a `#181b22`) com alto contraste em textos e componentes.
+
+---
+
+## Licença
+
+Este projeto é disponibilizado sob a licença **MIT**.
