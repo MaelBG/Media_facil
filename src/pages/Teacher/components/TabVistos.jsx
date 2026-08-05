@@ -1,9 +1,12 @@
 import { Edit, Trash2 } from "lucide-react";
+import SortableHeader from "./SortableHeader";
 
 export default function TabVistos({
   students,
   weeks,
   vistos,
+  sortConfig,
+  onSort,
   handleDeleteWeek,
   handleVistoToggle,
   getStudentWeightedAverage,
@@ -23,33 +26,46 @@ export default function TabVistos({
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr className="bg-surface-container-low">
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container w-64">
-                Aluno / Matrícula
-              </th>
+              <SortableHeader
+                label="Aluno / Matrícula"
+                sortKey="nome"
+                currentSort={sortConfig}
+                onSort={onSort}
+                className="w-64 border-b border-surface-container"
+              />
               
               {/* Weekly columns */}
               {weeks.map(w => (
-                <th 
-                  key={w} 
-                  className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-24 group relative"
+                <SortableHeader
+                  key={w}
+                  sortKey={`week_${w}`}
+                  currentSort={sortConfig}
+                  onSort={onSort}
+                  align="center"
+                  className="w-24 border-b border-surface-container"
                 >
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-1 relative">
                     Semana {w}
                     <button
                       type="button"
-                      onClick={() => handleDeleteWeek(w)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteWeek(w); }}
                       className="opacity-0 group-hover:opacity-100 p-0.5 text-error hover:bg-error-container rounded transition-all absolute top-1 right-1 cursor-pointer"
                       title={`Excluir Semana ${w}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
-                </th>
+                </SortableHeader>
               ))}
 
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-36">
-                Média Final (Ponderada)
-              </th>
+              <SortableHeader
+                label="Média Final (Ponderada)"
+                sortKey="media_final"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-36 border-b border-surface-container"
+              />
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-container">

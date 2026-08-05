@@ -1,8 +1,11 @@
 import { Edit, Trash2 } from "lucide-react";
+import SortableHeader from "./SortableHeader";
 
 export default function TabBoletim({
   students,
   classWeights,
+  sortConfig,
+  onSort,
   getStudentWeightedAverage,
   getStudentExamAverage,
   getStudentPaulistaAverage,
@@ -21,24 +24,53 @@ export default function TabBoletim({
         <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-surface-container-low">
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container w-64">
-                Aluno / Matrícula
-              </th>
-              <th className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-32">
-                Provas/Proj. ({classWeights.provas}%)
-              </th>
-              <th className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-32">
-                P. Paulista ({classWeights.prova_paulista ?? 20}%)
-              </th>
-              <th className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-36">
-                Atividades ({classWeights.atividades}%)
-              </th>
-              <th className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-36">
-                Vistos Caderno ({classWeights.vistos}%)
-              </th>
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-32">
-                Média Final
-              </th>
+              <SortableHeader
+                label="Aluno / Matrícula"
+                sortKey="nome"
+                currentSort={sortConfig}
+                onSort={onSort}
+                className="w-64 border-b border-surface-container"
+              />
+              <SortableHeader
+                label={`Provas/Proj. (${classWeights.provas}%)`}
+                sortKey="provas"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-32 border-b border-surface-container"
+              />
+              <SortableHeader
+                label={`P. Paulista (${classWeights.prova_paulista ?? 20}%)`}
+                sortKey="paulista"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-32 border-b border-surface-container"
+              />
+              <SortableHeader
+                label={`Atividades (${classWeights.atividades}%)`}
+                sortKey="atividades"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-36 border-b border-surface-container"
+              />
+              <SortableHeader
+                label={`Vistos Caderno (${classWeights.vistos}%)`}
+                sortKey="vistos"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-36 border-b border-surface-container"
+              />
+              <SortableHeader
+                label="Média Final"
+                sortKey="media_final"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-32 border-b border-surface-container"
+              />
               <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-32">
                 Situação
               </th>

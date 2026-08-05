@@ -34,6 +34,9 @@ export default function ClassView({
   // Search query
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Sort state
+  const [sortConfig, setSortConfig] = useState({ key: "nome", direction: "asc" });
+
   // Saving cell feedback state
   const [savingCell, setSavingCell] = useState(null);
 
@@ -58,6 +61,70 @@ export default function ClassView({
       s.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.matricula.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  };
+
+  // Sort handler
+  const handleSort = (key) => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      const defaultDir = key === "nome" ? "asc" : "desc";
+      return { key, direction: defaultDir };
+    });
+  };
+
+  // Filter & sort students
+  const getSortedAndFilteredStudents = () => {
+    const filtered = getFilteredStudents();
+    if (!sortConfig.key) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let valA, valB;
+
+      if (sortConfig.key === "nome") {
+        valA = (a.nome || "").toLowerCase();
+        valB = (b.nome || "").toLowerCase();
+        return sortConfig.direction === "asc" 
+          ? valA.localeCompare(valB) 
+          : valB.localeCompare(valA);
+      }
+
+      if (sortConfig.key === "provas") {
+        valA = Number(getStudentExamAverage(a.id)) || 0;
+        valB = Number(getStudentExamAverage(b.id)) || 0;
+      } else if (sortConfig.key === "paulista") {
+        valA = Number(getStudentPaulistaAverage(a.id)) || 0;
+        valB = Number(getStudentPaulistaAverage(b.id)) || 0;
+      } else if (sortConfig.key === "atividades") {
+        valA = Number(getStudentActivityScore(a.id)) || 0;
+        valB = Number(getStudentActivityScore(b.id)) || 0;
+      } else if (sortConfig.key === "vistos") {
+        valA = Number(getStudentVistoScore(a.id)) || 0;
+        valB = Number(getStudentVistoScore(b.id)) || 0;
+      } else if (sortConfig.key === "media_final") {
+        valA = Number(getStudentWeightedAverage(a.id)) || 0;
+        valB = Number(getStudentWeightedAverage(b.id)) || 0;
+      } else if (sortConfig.key.startsWith("activity_")) {
+        const actId = sortConfig.key.replace("activity_", "");
+        const gradeA = getStudentGradeForActivity(a.id, actId);
+        const gradeB = getStudentGradeForActivity(b.id, actId);
+        valA = gradeA === "" || gradeA === null ? -1 : Number(gradeA);
+        valB = gradeB === "" || gradeB === null ? -1 : Number(gradeB);
+      } else if (sortConfig.key.startsWith("week_")) {
+        const semana = Number(sortConfig.key.replace("week_", ""));
+        valA = vistos.find(v => v.aluno_id === a.id && v.semana === semana)?.status ? 1 : 0;
+        valB = vistos.find(v => v.aluno_id === b.id && v.semana === semana)?.status ? 1 : 0;
+      } else {
+        valA = a[sortConfig.key] || "";
+        valB = b[sortConfig.key] || "";
+      }
+
+      if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+
+      return (a.nome || "").localeCompare(b.nome || "");
+    });
   };
 
   // Grade retrieval logic
@@ -373,7 +440,7 @@ export default function ClassView({
   };
 
   const classObj = classes.find(c => c.id === selectedClassId);
-  const filteredStudents = getFilteredStudents();
+  const sortedStudents = getSortedAndFilteredStudents();
 
   return (
     <main className="ml-64 flex-1 p-10 min-h-screen bg-background">
@@ -481,8 +548,10 @@ export default function ClassView({
           <ClassViewSkeleton />
         ) : activeTab === "boletim" && (
           <TabBoletim
-            students={filteredStudents}
+            students={sortedStudents}
             classWeights={classWeights}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             getStudentWeightedAverage={getStudentWeightedAverage}
             getStudentExamAverage={getStudentExamAverage}
             getStudentPaulistaAverage={getStudentPaulistaAverage}
@@ -496,9 +565,11 @@ export default function ClassView({
         {(activeTab === "provas" || activeTab === "prova_paulista") && (
           <TabProvas
             tipo={activeTab === "provas" ? "prova" : "prova_paulista"}
-            students={filteredStudents}
+            students={sortedStudents}
             activities={activities}
             savingCell={savingCell}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             getStudentGradeForActivity={getStudentGradeForActivity}
             getStudentWeightedAverage={getStudentWeightedAverage}
             handleGradeChange={handleGradeChange}
@@ -511,8 +582,10 @@ export default function ClassView({
 
         {activeTab === "atividades" && (
           <TabAtividades
-            students={filteredStudents}
+            students={sortedStudents}
             activities={activities}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             getStudentActivityCountText={getStudentActivityCountText}
             getStudentGradeForActivity={getStudentGradeForActivity}
             getStudentWeightedAverage={getStudentWeightedAverage}
@@ -526,9 +599,11 @@ export default function ClassView({
 
         {activeTab === "vistos" && (
           <TabVistos
-            students={filteredStudents}
+            students={sortedStudents}
             weeks={weeks}
             vistos={vistos}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             handleDeleteWeek={handleDeleteWeek}
             handleVistoToggle={handleVistoToggle}
             getStudentWeightedAverage={getStudentWeightedAverage}
