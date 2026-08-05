@@ -26,7 +26,13 @@ dist-ssr
 # Environment variables
 .env
 .env.local
-*.env.local
+.env.*.local
+*.env
+
+# Certificates and private keys
+*.pem
+*.key
+*.cert
 
 # Playwright E2E Test Artifacts
 test-results/
@@ -35,5 +41,6 @@ playwright-report/
 # Sensitive Student Data (Local docs and lists)
 docs/
 alunos_*.md
+
 
 
