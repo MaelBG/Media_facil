@@ -1,10 +1,13 @@
 import { Edit, Trash2 } from "lucide-react";
+import SortableHeader from "./SortableHeader";
 
 export default function TabProvas({
   tipo,
   students,
   activities,
   savingCell,
+  sortConfig,
+  onSort,
   getStudentGradeForActivity,
   getStudentWeightedAverage,
   handleGradeChange,
@@ -30,15 +33,23 @@ export default function TabProvas({
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr className="bg-surface-container-low">
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container w-64">
-                Aluno / Matrícula
-              </th>
+              <SortableHeader
+                label="Aluno / Matrícula"
+                sortKey="nome"
+                currentSort={sortConfig}
+                onSort={onSort}
+                className="w-64 border-b border-surface-container"
+              />
               
               {/* Activities/Provas Headers */}
               {filteredActivities.map(at => (
-                <th 
+                <SortableHeader 
                   key={at.id}
-                  className="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center group"
+                  sortKey={`activity_${at.id}`}
+                  currentSort={sortConfig}
+                  onSort={onSort}
+                  align="center"
+                  className="border-b border-surface-container"
                 >
                   <div className="space-y-1 relative">
                     <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
@@ -52,7 +63,7 @@ export default function TabProvas({
                     <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity mt-1">
                       <button
                         type="button"
-                        onClick={() => handleStartEditActivity(at)}
+                        onClick={(e) => { e.stopPropagation(); handleStartEditActivity(at); }}
                         className="text-primary hover:text-primary/85 p-0.5 transition-all cursor-pointer"
                         title={isPaulista ? "Editar Prova Paulista" : "Editar Prova"}
                       >
@@ -60,7 +71,7 @@ export default function TabProvas({
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteActivity(at.id, at.titulo)}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteActivity(at.id, at.titulo); }}
                         className="text-error hover:text-error/85 p-0.5 transition-all cursor-pointer"
                         title={isPaulista ? "Excluir Prova Paulista" : "Excluir Prova"}
                       >
@@ -68,12 +79,17 @@ export default function TabProvas({
                       </button>
                     </div>
                   </div>
-                </th>
+                </SortableHeader>
               ))}
 
-              <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-container text-center w-36">
-                Média Final (Ponderada)
-              </th>
+              <SortableHeader
+                label="Média Final (Ponderada)"
+                sortKey="media_final"
+                currentSort={sortConfig}
+                onSort={onSort}
+                align="center"
+                className="w-36 border-b border-surface-container"
+              />
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-container">
