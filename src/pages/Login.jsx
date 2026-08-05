@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { dbService } from "../db";
-import { School, AlertTriangle, ShieldAlert } from "lucide-react";
+import { School, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 60 * 1000; // 60 segundos
@@ -91,8 +91,8 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
       setEmail("ismaelfilho@professor.com");
       setSenha("123456");
     } else {
-      setEmail("ana@escola.com");
-      setSenha("123");
+      setEmail("amanda@barao.com");
+      setSenha("123456");
     }
   };
 
@@ -101,12 +101,26 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-surface-container-low">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-surface-container overflow-hidden p-8">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="inline-flex w-12 h-12 bg-primary rounded-xl items-center justify-center text-white mb-4">
             <School className="w-6 h-6" />
           </div>
           <h1 className="text-3xl font-extrabold text-primary tracking-tight font-sans">Média Fácil</h1>
           <p className="text-on-surface-variant text-sm mt-1">Acesso ao Portal Acadêmico</p>
+        </div>
+
+        {/* Lembrete da regra de e-mail dos alunos */}
+        <div className="mb-6 p-3.5 bg-primary/5 rounded-xl border border-primary/20 flex items-start gap-2.5 text-xs text-on-surface-variant">
+          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-on-surface text-xs">💡 Como acessar como Aluno:</p>
+            <p className="mt-1 text-[11px] leading-relaxed">
+              O seu e-mail é formato por: <span className="font-semibold text-on-surface">primeiro nome</span> + <span className="font-semibold text-on-surface">último nome</span> (caso haja outro aluno com mesmo nome) + <span className="font-bold text-primary">@barao.com</span> ou <span className="font-bold text-primary">@diogenes.com</span>.
+            </p>
+            <p className="mt-1 text-[10px] text-on-surface-variant/80 italic">
+              Exemplos: amanda@barao.com, joaosantos@barao.com ou abner@diogenes.com
+            </p>
+          </div>
         </div>
 
         {isLockedOut ? (
@@ -135,7 +149,7 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ex: ismaelfilho@professor.com" 
+              placeholder="Ex: amanda@barao.com ou abner@diogenes.com" 
               required
               disabled={isLoading || isLockedOut}
               className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
