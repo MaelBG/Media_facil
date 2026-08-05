@@ -118,7 +118,7 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               O seu e-mail é formato por: <span className="font-semibold text-on-surface">primeiro nome</span> + <span className="font-semibold text-on-surface">último nome</span> (caso haja outro aluno com mesmo nome) + <span className="font-bold text-primary">@barao.com</span> ou <span className="font-bold text-primary">@diogenes.com</span>.
             </p>
             <p className="mt-1 text-[10px] text-on-surface-variant/80 italic">
-              Exemplos: amanda@barao.com, joaosantos@barao.com ou abner@diogenes.com
+              Exemplos: rogerio@barao.com, rogeriosantos@barao.com ou rogerio@diogenes.com
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ex: amanda@barao.com ou abner@diogenes.com" 
+              placeholder="Ex: rogerio@barao.com ou rogerio@diogenes.com" 
               required
               disabled={isLoading || isLockedOut}
               className="w-full px-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50"
