@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { dbService } from "../db";
+import { appConfig } from "../config/appConfig.js";
+import { DEMO_QUICK_ACCESS } from "../demo/demoFixtures.js";
 import { School, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -87,13 +89,10 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
   };
 
   const handleQuickLogin = (role) => {
-    if (role === "professor") {
-      setEmail("ismaelfilho@professor.com");
-      setSenha("123456");
-    } else {
-      setEmail("amanda@barao.com");
-      setSenha("123456");
-    }
+    const account = DEMO_QUICK_ACCESS[role];
+    if (!account) return;
+    setEmail(account.email);
+    setSenha(account.password);
   };
 
   const isLockedOut = lockoutRemainingSec > 0;
@@ -182,8 +181,8 @@ export default function Login({ setCurrentUser, navigateTo, loadTeacherData, loa
           </button>
         </form>
 
-        {/* Botões de demonstração exibidos apenas em ambiente local/desenvolvimento */}
-        {(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && (
+        {/* Acesso rápido existe somente quando o modo demo foi configurado explicitamente. */}
+        {appConfig.valid && appConfig.mode === "demo" && appConfig.environment === "local" && (
           <div className="mt-8 pt-6 border-t border-outline-variant">
             <p className="text-center text-xs text-on-surface-variant font-medium mb-3">Testes rápidos (Demonstração):</p>
             <div className="grid grid-cols-2 gap-3">

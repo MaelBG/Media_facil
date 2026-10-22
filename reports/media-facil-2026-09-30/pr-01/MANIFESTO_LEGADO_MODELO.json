@@ -1,0 +1,31 @@
+{
+  "manifest_version": 1,
+  "source": "production_read_only_inventory",
+  "captured_at": "YYYY-MM-DD",
+  "classification_basis": {
+    "bimestre": 3,
+    "bimestre_source": "responsavel_do_projeto",
+    "year_policy": "validar_por_turma; nao inferir pelo timestamp"
+  },
+  "classes": [
+    {
+      "turma_id": "<uuid — preencher somente no arquivo local protegido>",
+      "ano_original": "<valor observado>",
+      "ano_letivo": null,
+      "bimestre": 3,
+      "status_classificacao": "pendente_validacao",
+      "motivo": "<evidencia e/ou pendencia>",
+      "contagens_referencia": {
+        "atividades": null,
+        "notas": null,
+        "semanas": null,
+        "vistos": null
+      }
+    }
+  ],
+  "migration_policy": {
+    "preservar_ids_e_valores": true,
+    "inferir_bimestre_por_data": false,
+    "atualizar_producao": false
+  }
+}

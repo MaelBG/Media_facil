@@ -1,27 +1,26 @@
-// Serviço de Banco de Dados local/Supabase para Média Fácil
-// Suporta modo híbrido: usa Supabase se chaves estiverem configuradas no .env,
-// caso contrário, faz o fallback inteligente para o localStorage simulado.
+// Serviço de dados. O modo é explícito: a ausência de configuração não troca
+// silenciosamente entre a demonstração local e o Supabase.
 
 import { supabase } from "./supabaseClient";
+import { appConfig } from "./config/appConfig.js";
+import { authenticateDemoUser, DEMO_DB_KEY } from "./demo/demoFixtures.js";
+import { initializeDemoDatabase } from "./demo/demoStore.js";
 import { createClient } from "@supabase/supabase-js";
 
-const isSupabaseConfigured = !!(
-  import.meta.env.VITE_SUPABASE_URL && 
-  import.meta.env.VITE_SUPABASE_ANON_KEY && 
-  import.meta.env.VITE_SUPABASE_URL !== "https://seu-projeto.supabase.co"
-);
+const isCloudMode = appConfig.mode === "cloud";
+const isDemoMode = appConfig.valid && appConfig.mode === "demo";
 
-console.log(
-  isSupabaseConfigured 
-    ? "🔌 Média Fácil: Conectado ao Supabase com sucesso!" 
-    : "💾 Média Fácil: Executando em modo de simulação local (localStorage)."
-);
+if (appConfig.valid) {
+  console.info(appConfig.mode === "cloud"
+    ? `Média Fácil: modo cloud (${appConfig.environment}).`
+    : `Média Fácil: demonstração (${appConfig.environment}); dados locais fictícios.`);
+}
 
 // Cliente auxiliar sem persistência de sessão para o professor cadastrar alunos sem deslogar
-const tempSupabase = isSupabaseConfigured
+const tempSupabase = isCloudMode && appConfig.valid
   ? createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY,
+      appConfig.supabaseUrl,
+      appConfig.supabaseAnonKey,
       {
         auth: {
           persistSession: false,
@@ -33,83 +32,19 @@ const tempSupabase = isSupabaseConfigured
   : null;
 
 // ==========================================
-// 1. BANCO DE DADOS LOCAL (FALLBACK SIMULADO)
+// 1. ARMAZENAMENTO LOCAL EXCLUSIVO DA DEMONSTRAÇÃO
 // ==========================================
 
-const SEED_DATA = {
-  perfis: [
-    { id: "prof-1", nome: "Prof. Ismael Filho", email: "ismaelfilho@professor.com", tipo: "professor", senha: "123", escola: "Etec de Vila Carrão", semestre: "Semestre 2026.1", avatar_cor: "bg-primary" },
-    { id: "alu-1", nome: "Ana Silva", email: "ana@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A01" },
-    { id: "alu-2", nome: "Bruno Santos", email: "bruno@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A02" },
-    { id: "alu-3", nome: "Carla Oliveira", email: "carla@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-1", turma_ids: ["turma-1", "turma-2"], matricula: "DS3A03" },
-    { id: "alu-4", nome: "Diego Lima", email: "diego@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-2", turma_ids: ["turma-2"], matricula: "INF201" },
-    { id: "alu-5", nome: "Elena Souza", email: "elena@escola.com", tipo: "aluno", senha: "123", turma_id: "turma-2", turma_ids: ["turma-2"], matricula: "INF202" }
-  ],
-  turmas: [
-    { id: "turma-1", nome: "2ºE - Redes de Computadores", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-2e-2", nome: "2ºE - Lógica e Linguagem de Programação", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-2b-1", nome: "2ºB - Carreira e Competências", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-2b-2", nome: "2ºB - Redes de Computadores", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-3c-1", nome: "3ºC - Programação Mobile", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-3c-2", nome: "3ºC - Versionamento de Código", ano: "2026", professor_id: "prof-1" },
-    { id: "turma-3c-3", nome: "3ºC - Sistemas de Mensageria", ano: "2026", professor_id: "prof-1" }
-  ],
-  atividades: [
-    { id: "at-1", titulo: "Atividade 1: Estrutura React Native", tipo: "atividade", valor_maximo: 10, turma_id: "turma-1", data_entrega: "2026-05-15" },
-    { id: "at-3", titulo: "Prova Bimestral 1", tipo: "prova", valor_maximo: 10, turma_id: "turma-1", data_entrega: "2026-05-25" },
-    { id: "at-4", titulo: "Atividade 2: Props e Componentes", tipo: "atividade", valor_maximo: 10, turma_id: "turma-1", data_entrega: "2026-06-01" },
-    { id: "at-5", titulo: "Atividade 1: Lógica de Programação HTML", tipo: "atividade", valor_maximo: 10, turma_id: "turma-2", data_entrega: "2026-05-14" },
-    { id: "at-7", titulo: "Prova Mensal de CSS", tipo: "prova", valor_maximo: 10, turma_id: "turma-2", data_entrega: "2026-05-27" }
-  ],
-  notas: [
-    { id: "n-1", aluno_id: "alu-1", atividade_id: "at-1", valor_obtido: 9.5 },
-    { id: "n-3", aluno_id: "alu-1", atividade_id: "at-3", valor_obtido: 8.0 },
-    { id: "n-4", aluno_id: "alu-1", atividade_id: "at-4", valor_obtido: 10.0 },
-    { id: "n-5", aluno_id: "alu-2", atividade_id: "at-1", valor_obtido: 7.0 },
-    { id: "n-7", aluno_id: "alu-2", atividade_id: "at-3", valor_obtido: 6.5 },
-    { id: "n-8", aluno_id: "alu-2", atividade_id: "at-4", valor_obtido: 8.0 },
-    { id: "n-9", aluno_id: "alu-3", atividade_id: "at-1", valor_obtido: 8.5 },
-    { id: "n-11", aluno_id: "alu-3", atividade_id: "at-3", valor_obtido: 9.0 },
-    { id: "n-12", aluno_id: "alu-3", atividade_id: "at-4", valor_obtido: 7.5 },
-    { id: "n-13", aluno_id: "alu-4", atividade_id: "at-5", valor_obtido: 6.0 },
-    { id: "n-15", aluno_id: "alu-4", atividade_id: "at-7", valor_obtido: 5.5 },
-    { id: "n-16", aluno_id: "alu-5", atividade_id: "at-5", valor_obtido: 9.0 },
-    { id: "n-18", aluno_id: "alu-5", atividade_id: "at-7", valor_obtido: 9.5 }
-  ],
-  semanas_turma: [
-    { classId: "turma-1", semanas: [1, 2, 3, 4, 5] },
-    { classId: "turma-2", semanas: [1, 2, 3, 4] },
-    { classId: "turma-3", semanas: [1, 2, 3, 4] }
-  ],
-  vistos_semanais: [
-    { aluno_id: "alu-1", class_id: "turma-1", semana: 1, status: true },
-    { aluno_id: "alu-2", class_id: "turma-1", semana: 1, status: true },
-    { aluno_id: "alu-3", class_id: "turma-1", semana: 1, status: false },
-    { aluno_id: "alu-1", class_id: "turma-1", semana: 2, status: true },
-    { aluno_id: "alu-2", class_id: "turma-1", semana: 2, status: false },
-    { aluno_id: "alu-3", class_id: "turma-1", semana: 2, status: true },
-    { aluno_id: "alu-1", class_id: "turma-1", semana: 3, status: false },
-    { aluno_id: "alu-2", class_id: "turma-1", semana: 3, status: false },
-    { aluno_id: "alu-3", class_id: "turma-1", semana: 3, status: true },
-    { aluno_id: "alu-1", class_id: "turma-1", semana: 4, status: true },
-    { aluno_id: "alu-2", class_id: "turma-1", semana: 4, status: true },
-    { aluno_id: "alu-3", class_id: "turma-1", semana: 4, status: false },
-    { aluno_id: "alu-1", class_id: "turma-1", semana: 5, status: true },
-    { aluno_id: "alu-2", class_id: "turma-1", semana: 5, status: false },
-    { aluno_id: "alu-3", class_id: "turma-1", semana: 5, status: false }
-  ]
-};
-
-function initializeLocalDB() {
-  if (!localStorage.getItem("prof_gradebook_db")) {
-    localStorage.setItem("prof_gradebook_db", JSON.stringify(SEED_DATA));
-  }
-}
-
-initializeLocalDB();
+const demoInitialization = isDemoMode
+  ? initializeDemoDatabase(localStorage)
+  : null;
 
 function getLocalDB() {
-  const db = JSON.parse(localStorage.getItem("prof_gradebook_db"));
+  if (!isDemoMode || !demoInitialization?.ok) {
+    throw new Error(demoInitialization?.error || "O armazenamento local está disponível somente no modo demo.");
+  }
+
+  const db = JSON.parse(localStorage.getItem(DEMO_DB_KEY));
   if (db) {
     let changed = false;
     if (!db.semanas_turma) {
@@ -144,13 +79,6 @@ function getLocalDB() {
         }
       });
     }
-    if (db.perfis) {
-      const ana = db.perfis.find(p => p.email && p.email.toLowerCase() === "ana@escola.com");
-      if (ana && ana.senha !== "123") {
-        ana.senha = "123";
-        changed = true;
-      }
-    }
     if (changed) {
       saveLocalDB(db);
     }
@@ -159,7 +87,10 @@ function getLocalDB() {
 }
 
 function saveLocalDB(db) {
-  localStorage.setItem("prof_gradebook_db", JSON.stringify(db));
+  if (!isDemoMode) {
+    throw new Error("Gravações locais estão disponíveis somente no modo demo.");
+  }
+  localStorage.setItem(DEMO_DB_KEY, JSON.stringify(db));
 }
 
 
@@ -170,7 +101,7 @@ function saveLocalDB(db) {
 export const dbService = {
   // Autenticação
   login: async (email, senha) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
         password: senha 
@@ -188,19 +119,17 @@ export const dbService = {
     } else {
       // Local
       const db = getLocalDB();
-      const usuario = db.perfis.find(p => p.email.toLowerCase() === email.toLowerCase() && p.senha === senha);
+      const usuario = authenticateDemoUser(db, email, senha);
       if (usuario) {
-        const sessao = { ...usuario };
-        delete sessao.senha;
-        localStorage.setItem("prof_gradebook_session", JSON.stringify(sessao));
-        return { success: true, user: sessao };
+        localStorage.setItem("prof_gradebook_session", JSON.stringify(usuario));
+        return { success: true, user: usuario };
       }
       return { success: false, error: "E-mail ou senha incorretos." };
     }
   },
 
   getCurrentUser: async () => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
       
@@ -218,7 +147,7 @@ export const dbService = {
   },
 
   logout: async () => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       await supabase.auth.signOut();
     } else {
       localStorage.removeItem("prof_gradebook_session");
@@ -227,7 +156,7 @@ export const dbService = {
 
   // Turmas
   getClasses: async (professorId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data } = await supabase
         .from("turmas")
         .select("*")
@@ -241,7 +170,7 @@ export const dbService = {
   },
 
   getClassById: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data } = await supabase
         .from("turmas")
         .select("*")
@@ -255,7 +184,7 @@ export const dbService = {
   },
 
   createClass: async (nome, ano, professorId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("turmas")
         .insert({ nome, ano, professor_id: professorId })
@@ -295,7 +224,7 @@ export const dbService = {
   },
 
   deleteClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { error } = await supabase
         .from("turmas")
         .delete()
@@ -318,7 +247,7 @@ export const dbService = {
 
   // Alunos
   getStudentsByClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("turma_alunos")
         .select("aluno:perfis(*)")
@@ -335,7 +264,7 @@ export const dbService = {
   },
 
   addStudentToClass: async (classId, nome, email, senha, matricula) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       // 1. Verifica se já existe perfil com esse email
       const { data: existingStudent } = await supabase
         .from("perfis")
@@ -451,7 +380,7 @@ export const dbService = {
 
   // Atividades
   getActivitiesByClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data } = await supabase
         .from("atividades")
         .select("*")
@@ -465,7 +394,7 @@ export const dbService = {
   },
 
   createActivity: async (classId, titulo, tipo, valorMaximo, dataEntrega) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("atividades")
         .insert({
@@ -497,7 +426,7 @@ export const dbService = {
   },
 
   updateActivity: async (activityId, titulo, valorMaximo, dataEntrega) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("atividades")
         .update({
@@ -525,7 +454,7 @@ export const dbService = {
   },
 
   deleteActivity: async (activityId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { error } = await supabase
         .from("atividades")
         .delete()
@@ -544,7 +473,7 @@ export const dbService = {
 
   // Notas
   getGradesByClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data: activities } = await supabase
         .from("atividades")
         .select("id")
@@ -568,7 +497,7 @@ export const dbService = {
   },
 
   saveGrade: async (alunoId, atividadeId, valorObtido) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const valor = (valorObtido === "" || valorObtido === null || valorObtido === undefined) ? null : Number(valorObtido);
       if (valor === null) {
         await supabase
@@ -611,7 +540,7 @@ export const dbService = {
 
   // Controle de Vistos Semanais
   getWeeksByClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data } = await supabase
         .from("semanas_turma")
         .select("semana")
@@ -627,7 +556,7 @@ export const dbService = {
   },
 
   addWeekToClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const semanas = await dbService.getWeeksByClass(classId);
       const proximaSemana = semanas.length > 0 ? Math.max(...semanas) + 1 : 1;
       await supabase
@@ -656,7 +585,7 @@ export const dbService = {
   },
 
   deleteWeekFromClass: async (classId, semana) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       // 1. Deleta a semana letiva da turma
       const { error: weekError } = await supabase
         .from("semanas_turma")
@@ -687,7 +616,7 @@ export const dbService = {
   },
 
   saveAllVistosForStudent: async (alunoId, classId, semanas, status) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const records = semanas.map(semana => ({
         aluno_id: alunoId,
         turma_id: classId,
@@ -724,7 +653,7 @@ export const dbService = {
   },
 
   getVistosByClass: async (classId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data } = await supabase
         .from("vistos_semanais")
         .select("*")
@@ -737,7 +666,7 @@ export const dbService = {
   },
 
   saveVistoSemanal: async (alunoId, classId, semana, status) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       await supabase
         .from("vistos_semanais")
         .upsert({ 
@@ -770,7 +699,7 @@ export const dbService = {
   },
 
   updateClassWeights: async (classId, pesos) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("turmas")
         .update({ pesos })
@@ -798,7 +727,7 @@ export const dbService = {
 
   // Painel do Aluno
   getStudentReport: async (alunoId, targetClassId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data: profile } = await supabase
         .from("perfis")
         .select("*")
@@ -929,7 +858,7 @@ export const dbService = {
   },
 
   updateProfile: async (userId, data) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       // Se houver alteração de senha, atualiza no Supabase Auth
       if (data.senha && data.senha !== "******") {
         const { error: authError } = await supabase.auth.updateUser({ 
@@ -984,7 +913,7 @@ export const dbService = {
   },
 
   getUserPassword: async (userId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       // No Supabase, as senhas são confidenciais. Retornamos um placeholder
       return "******";
     } else {
@@ -995,7 +924,7 @@ export const dbService = {
   },
 
   updateClass: async (classId, nome, ano) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data, error } = await supabase
         .from("turmas")
         .update({ nome, ano })
@@ -1018,7 +947,7 @@ export const dbService = {
   },
 
   removeStudentFromClass: async (classId, studentId) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { error } = await supabase
         .from("turma_alunos")
         .delete()
@@ -1042,7 +971,7 @@ export const dbService = {
   },
 
   updateStudentInfo: async (studentId, data) => {
-    if (isSupabaseConfigured) {
+    if (isCloudMode) {
       const { data: updated, error } = await supabase
         .from("perfis")
         .update({

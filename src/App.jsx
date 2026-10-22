@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import { dbService } from "./db";
+import { appConfig } from "./config/appConfig.js";
 import { calcWeightedAvg } from "./utils/calculations";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
@@ -13,43 +14,10 @@ const ClassView = lazy(() => import("./pages/Teacher/ClassView"));
 const StudentDashboard = lazy(() => import("./pages/Student/Dashboard"));
 
 
-const getInitialUser = () => {
-  const localSession = localStorage.getItem("prof_gradebook_session");
-  if (localSession) return JSON.parse(localSession);
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes("auth-token")) {
-        const item = JSON.parse(localStorage.getItem(key));
-        if (item && item.user) {
-          return {
-            id: item.user.id,
-            nome: item.user.user_metadata?.nome || item.user.email.split("@")[0],
-            email: item.user.email,
-            tipo: item.user.user_metadata?.tipo || "aluno",
-            escola: item.user.user_metadata?.escola,
-            semestre: item.user.user_metadata?.semestre,
-            avatar_cor: item.user.user_metadata?.avatar_cor || "bg-primary",
-            matricula: item.user.user_metadata?.matricula
-          };
-        }
-      }
-    }
-  } catch (e) {
-    console.error("Erro ao ler sessão do Supabase no localStorage", e);
-  }
-  return null;
-};
-
 export default function App() {
-  const [currentUser, setCurrentUser] = useState(() => getInitialUser());
-  const [view, setView] = useState(() => {
-    const user = getInitialUser();
-    if (user) {
-      return user.tipo === "professor" ? "teacher_dashboard" : "student_dashboard";
-    }
-    return "login";
-  }); // 'login' | 'teacher_dashboard' | 'teacher_class' | 'student_dashboard'
+  const [currentUser, setCurrentUser] = useState(null);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [view, setView] = useState("login"); // 'login' | 'teacher_dashboard' | 'teacher_class' | 'student_dashboard'
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [activeTab, setActiveTab] = useState("boletim");
   const [studentActiveTab, setStudentActiveTab] = useState("general_progress"); // 'general_progress' | 'subject_detail'
@@ -199,19 +167,28 @@ export default function App() {
 
   // Check login session on load
   useEffect(() => {
+    let active = true;
     const initSession = async () => {
-      const user = await dbService.getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
-        if (user.tipo === "professor") {
-          await loadTeacherData(user.id);
+      try {
+        const user = await dbService.getCurrentUser();
+        if (!active) return;
+        if (user) {
+          setCurrentUser(user);
+          if (user.tipo === "professor") {
+            await loadTeacherData(user.id);
+          }
+          await syncStateFromUrl(user);
+        } else {
+          setView("login");
         }
-        await syncStateFromUrl(user);
-      } else {
-        setView("login");
+      } catch {
+        if (active) setView("login");
+      } finally {
+        if (active) setSessionReady(true);
       }
     };
     initSession();
+    return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -372,8 +349,18 @@ export default function App() {
     );
   };
 
+  if (!sessionReady) {
+    return (
+      <div className="font-sans min-h-screen text-on-surface bg-background antialiased">
+        <ModeIndicator />
+        <PageLoader />
+      </div>
+    );
+  }
+
   return (
     <div className="font-sans min-h-screen text-on-surface bg-background antialiased selection:bg-primary-container selection:text-on-primary-container">
+      <ModeIndicator />
       <SpeedInsights />
       <Analytics />
       
@@ -481,6 +468,24 @@ export default function App() {
           </div>
         )}
       </Suspense>
+    </div>
+  );
+}
+
+function ModeIndicator() {
+  const isDemo = appConfig.mode === "demo";
+  const label = isDemo
+    ? `Demonstração · dados fictícios · ${appConfig.environment}`
+    : `Cloud · ${appConfig.environment === "production" ? "dados reais" : appConfig.environment}`;
+
+  return (
+    <div
+      role="status"
+      className={`fixed right-2 top-2 z-[100] rounded-full px-3 py-1.5 text-[10px] font-bold shadow-sm ${
+        isDemo ? "bg-amber-100 text-amber-950" : "bg-emerald-100 text-emerald-950"
+      }`}
+    >
+      {label}
     </div>
   );
 }

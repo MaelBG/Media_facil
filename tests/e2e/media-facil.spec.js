@@ -1,57 +1,49 @@
-/* global process */
 import { test, expect } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-import path from 'path';
+import { DEMO_QUICK_ACCESS } from '../../src/demo/demoFixtures.js';
 
-// Carrega variáveis do .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+async function loginAsDemo(page, role) {
+  const account = DEMO_QUICK_ACCESS[role];
+  await page.fill('input[type="email"]', account.email);
+  await page.fill('input[type="password"]', account.password);
+  await page.click('button[type="submit"]');
+}
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const blockedCloudRequests = new WeakMap();
 
 test.describe('Portal Acadêmico - Média Fácil', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Acessa a página de login
+    const attempts = [];
+    blockedCloudRequests.set(page, attempts);
+    await page.route('**/*', async route => {
+      const { hostname } = new URL(route.request().url());
+      if (hostname === 'supabase.co' || hostname.endsWith('.supabase.co')) {
+        attempts.push(route.request().url());
+        await route.abort();
+        return;
+      }
+      await route.continue();
+    });
     await page.goto('/');
+    await expect(page.getByRole('status')).toContainText('Demonstração · dados fictícios · local');
   });
 
-  test.afterEach(async () => {
-    // Limpeza obrigatória do banco de dados após cada teste (deleta turmas e alunos de E2E)
-    if (supabaseUrl && supabaseAnonKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-        // Autentica como professor para poder rodar a função
-        const { data } = await supabase.auth.signInWithPassword({
-          email: 'ismaelfilho@professor.com',
-          password: '123456'
-        });
-        if (data?.session) {
-          await supabase.rpc('clean_test_data');
-        }
-      } catch (err) {
-        console.error('Erro na limpeza pós-teste:', err);
-      }
-    }
+  test.afterEach(async ({ page }) => {
+    expect(blockedCloudRequests.get(page)).toEqual([]);
   });
 
   test('Deve exibir erro ao tentar logar com credenciais inválidas', async ({ page }) => {
-    await page.fill('input[type="email"]', 'login_errado@escola.com');
+    await page.fill('input[type="email"]', 'login_errado@example.test');
     await page.fill('input[type="password"]', 'senha_errada');
     await page.click('button[type="submit"]');
 
-    // Verifica se a mensagem de erro está visível (mensagem do Supabase em inglês ou pt-br)
     const errorBanner = page.locator('div[class*="bg-error-container"]');
-    await expect(errorBanner).toBeVisible();
-    await expect(errorBanner.locator('text=Invalid login credentials').or(errorBanner.locator('text=E-mail ou senha incorretos'))).toBeVisible();
+    await expect(errorBanner).toContainText('E-mail ou senha incorretos');
   });
 
   test('Deve abrir perfil do Professor, alterar cor do avatar e validar reatividade', async ({ page }) => {
     // Login
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     // Abre configurações de perfil
     await page.locator('[title="Configurações de Perfil"]').click();
@@ -69,9 +61,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
 
   test('Deve logar como Professor e realizar fluxo completo de Turma, Alunos, Provas e Vistos', async ({ page }) => {
     // 1. LOGIN
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     // Verifica se entrou no dashboard do professor
     await expect(page.locator('h1')).toContainText('Olá,');
@@ -112,12 +102,12 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     await page.click('button:has-text("Cadastrar Aluno")');
     const studentMatricula = `RM${Date.now().toString().slice(-6)}`;
     const studentName = `Aluno E2E_${Date.now()}`;
-    const studentEmail = `aluno_e2e_${Date.now()}@escola.com`;
+    const studentEmail = `aluno_e2e_${Date.now()}@example.test`;
     
     await page.fill('input[placeholder="Ex: Ana Clara"]', studentName);
     await page.fill('input[placeholder="DS3A99"]', studentMatricula);
     await page.fill('input[placeholder="Ex: ana@escola.com"]', studentEmail);
-    await page.fill('input[placeholder="Ex: 123"]', '123456'); // Senha válida de 6 dígitos para o Supabase
+    await page.fill('input[placeholder="Ex: 123"]', 'e2e-demo-1'); // Credencial sintética exclusiva desta execução local
     await page.click('button:has-text("Salvar Cadastro")');
 
     // Confirma que o aluno foi adicionado à tabela
@@ -273,13 +263,11 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
 
   test('Deve logar como Aluno, visualizar progresso geral, testar alteração de cor de perfil e deslogar', async ({ page }) => {
     // 1. LOGIN ALUNO
-    await page.fill('input[type="email"]', 'ana@escola.com');
-    await page.fill('input[type="password"]', '123');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'aluno');
 
     // Verifica se carregou o portal do aluno
     await expect(page.locator('h1')).toContainText('Meu Progresso');
-    await expect(page.locator('text=RM: DS3A01')).toBeVisible();
+    await expect(page.locator('text=RM: DEMO001')).toBeVisible();
 
     // 2. EDITA CONFIGURAÇÃO DE PERFIL DO ALUNO
     await page.locator('[title="Configurações de Perfil"]').click();
@@ -305,9 +293,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve logar como Professor, navegar pelo painel e realizar logout com sucesso', async ({ page }) => {
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     await expect(page.locator('h1')).toContainText('Olá,');
 
@@ -318,9 +304,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve marcar visto de caderno para um aluno e persistir alteração', async ({ page }) => {
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     await page.click('button:has-text("Nova Turma")');
     const classIdName = `Turma Visto E2E_${Date.now()}`;
@@ -335,8 +319,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     const studentName = `Aluno Visto E2E_${Date.now()}`;
     await page.fill('input[placeholder="Ex: Ana Clara"]', studentName);
     await page.fill('input[placeholder="DS3A99"]', studentMatricula);
-    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_visto_${Date.now()}@escola.com`);
-    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_visto_${Date.now()}@example.test`);
+    await page.fill('input[placeholder="Ex: 123"]', 'e2e-demo-1');
     await page.click('button:has-text("Salvar Cadastro")');
     await expect(page.locator(`text=${studentName}`)).toBeVisible();
 
@@ -370,9 +354,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve criar coluna de Prova Paulista, lançar nota e verificar reflexo no boletim consolidado', async ({ page }) => {
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     await page.click('button:has-text("Nova Turma")');
     const classIdName = `Turma Paulista E2E_${Date.now()}`;
@@ -387,8 +369,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     const studentName = `Aluno Paulista E2E_${Date.now()}`;
     await page.fill('input[placeholder="Ex: Ana Clara"]', studentName);
     await page.fill('input[placeholder="DS3A99"]', studentMatricula);
-    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_paulista_${Date.now()}@escola.com`);
-    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `aluno_paulista_${Date.now()}@example.test`);
+    await page.fill('input[placeholder="Ex: 123"]', 'e2e-demo-1');
     await page.click('button:has-text("Salvar Cadastro")');
 
     await page.locator('button:has-text("Pesos: Provas/Projetos")').click();
@@ -431,9 +413,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve logar como Aluno, acessar detalhes de uma disciplina e validar boletim detalhado com cálculo step-by-step', async ({ page }) => {
-    await page.fill('input[type="email"]', 'ana@escola.com');
-    await page.fill('input[type="password"]', '123');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'aluno');
 
     await page.click('button:has-text("Ver Detalhes")');
 
@@ -456,9 +436,7 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
   });
 
   test('Deve filtrar alunos dinamicamente através do campo de busca no diário de classe do Professor', async ({ page }) => {
-    await page.fill('input[type="email"]', 'ismaelfilho@professor.com');
-    await page.fill('input[type="password"]', '123456');
-    await page.click('button[type="submit"]');
+    await loginAsDemo(page, 'professor');
 
     await page.click('button:has-text("Nova Turma")');
     const classIdName = `Turma Busca E2E_${Date.now()}`;
@@ -473,8 +451,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     const student1Name = `Ana Maria_${Date.now()}`;
     await page.fill('input[placeholder="Ex: Ana Clara"]', student1Name);
     await page.fill('input[placeholder="DS3A99"]', student1Matricula);
-    await page.fill('input[placeholder="Ex: ana@escola.com"]', `ana_maria_${Date.now()}@escola.com`);
-    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `ana_maria_${Date.now()}@example.test`);
+    await page.fill('input[placeholder="Ex: 123"]', 'e2e-demo-1');
     await page.click('button:has-text("Salvar Cadastro")');
 
     await page.click('button:has-text("Cadastrar Aluno")');
@@ -482,8 +460,8 @@ test.describe('Portal Acadêmico - Média Fácil', () => {
     const student2Name = `Carlos Silva_${Date.now()}`;
     await page.fill('input[placeholder="Ex: Ana Clara"]', student2Name);
     await page.fill('input[placeholder="DS3A99"]', student2Matricula);
-    await page.fill('input[placeholder="Ex: ana@escola.com"]', `carlos_silva_${Date.now()}@escola.com`);
-    await page.fill('input[placeholder="Ex: 123"]', '123456');
+    await page.fill('input[placeholder="Ex: ana@escola.com"]', `carlos_silva_${Date.now()}@example.test`);
+    await page.fill('input[placeholder="Ex: 123"]', 'e2e-demo-1');
     await page.click('button:has-text("Salvar Cadastro")');
 
     await page.fill('input[placeholder="Buscar aluno por nome ou matrícula"]', 'Ana Maria');

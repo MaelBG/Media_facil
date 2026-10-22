@@ -1,12 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { appConfig } from "./config/appConfig.js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("Aviso: Chaves do Supabase não encontradas. Certifique-se de configurar o arquivo .env com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
-}
-
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+export const supabase = appConfig.valid && appConfig.mode === "cloud"
+  ? createClient(appConfig.supabaseUrl, appConfig.supabaseAnonKey)
   : null;

@@ -17,7 +17,7 @@
 * **Ordenação Multicritério:** Classificação dinâmica das turmas por Nome (A-Z / Z-A), Média Final Ponderada ou notas de componentes específicos (Provas, Prova Paulista, Atividades e Vistos).
 * **Fórmula de Média Configurável:** Definição de pesos percentuais para Provas/Projetos, Prova Paulista, Entregas de Atividades e Vistos do Caderno com normalização automática.
 * **Arquitetura de Segurança RLS:** Isolamento de dados entre turmas via Row Level Security (RLS) e funções no esquema `private` (`SECURITY DEFINER`) para evitar recursão no Postgres.
-* **Arquitetura Híbrida (Cloud e Local Fallback):** Funciona integrado ao Supabase ou em modo offline utilizando `localStorage` caso as variáveis de ambiente não estejam presentes.
+* **Modos isolados de dados:** Demonstração local com dados fictícios ou cloud com Supabase explicitamente configurado. Configuração ausente/inválida interrompe a inicialização; não há fallback silencioso.
 * **Modo Escuro (Dark Mode):** Interface adaptável com contraste calibrado para reduzir o cansaço visual em usos prolongados.
 * **Proteção de Acesso:** Rate limiting contra tentativas incorretas de login (lockout temporário de 60s) e convenção de e-mails institucionais por escola (`@barao.com` e `@diogenes.com`).
 
@@ -98,11 +98,19 @@ npm install
 ```
 
 ### 3. Variáveis de Ambiente
-Crie um arquivo `.env` na raiz do projeto (baseado em `.env.example`):
+Copie `.env.example` para `.env`. O exemplo inicia em demonstração com dados fictícios e isolados no navegador:
 ```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-anon-publica-aqui
+VITE_APP_DATA_MODE=demo
+VITE_APP_ENV=local
 ```
+
+Na demonstração local, os botões “Modo Professor” e “Modo Aluno” preenchem as contas fictícias de teste; também é possível entrar com `ismaelfilho@professor.com` ou `ana@escola.com`, senha `123`. Esses acessos existem apenas no modo demo local e não são contas do Supabase.
+
+Para testar integração local, inicie o Supabase local e configure `VITE_APP_DATA_MODE=cloud`, `VITE_APP_ENV=local`, `VITE_SUPABASE_URL=http://127.0.0.1:54321` e a chave pública do Supabase local. Em origem local, o app recusa qualquer URL cloud remota.
+
+Na Vercel, configure explicitamente o ambiente de produção com `VITE_APP_DATA_MODE=cloud`, `VITE_APP_ENV=production` e a chave pública do projeto de produção já mapeado. O domínio de produção só aceita esse projeto Supabase. Configure Preview com `VITE_APP_DATA_MODE=demo` e `VITE_APP_ENV=preview` até haver um Supabase separado para homologação. Preview não pode apontar para a produção.
+
+Nunca coloque `service_role`, `sb_secret_` ou outra chave administrativa em variável `VITE_*`; variáveis Vite são incorporadas ao bundle do navegador.
 
 ### 4. Executar em Desenvolvimento
 ```bash
@@ -113,6 +121,15 @@ npm run dev
 ```bash
 npm run build
 ```
+
+### 6. Testes
+```bash
+npm test                 # testes unitários puros; não inicia servidor ou banco
+npm run test:config      # testes da configuração de ambiente
+npm run test:demo        # testes das fixtures e do armazenamento demo
+```
+
+`npm run test:e2e:demo` executa a suíte Playwright somente contra o app demo local, em servidor e porta exclusivos. `npm run test:e2e` sem um alvo explícito é recusado. A suíte não carrega `.env`, remove chamadas de limpeza remota e falha se tentar acessar qualquer projeto Supabase. Testes cloud permanecem indisponíveis até haver infraestrutura descartável definida na 01.9.
 
 ---
 
